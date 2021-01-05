@@ -1,0 +1,5 @@
+This file gives a few errors between the reported and the actual found implentations.
+
+
+    * Paper suggested that ADAM was used optimizer, actual code used SGD with momentum
+        * Also uses learning rate scheduler, although parser is missing gamma coefficient for decay
