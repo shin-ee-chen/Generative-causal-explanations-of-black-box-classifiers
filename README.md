@@ -4,8 +4,11 @@ The goal of this project is to assess the reproducibility of NeurIPS 2020 paper 
 
 # Students
 Xinyi Chen
+
 Qingzhi Hu
+
 Mario Holubar
+
 Ivo Verhoeven
 
 # Requirements
