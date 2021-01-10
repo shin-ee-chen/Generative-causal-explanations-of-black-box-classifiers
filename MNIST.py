@@ -6,7 +6,7 @@ from torchvision.datasets import MNIST
 
 import torch.utils.data as data
 
-def MNIST_limited(root='./Dataset', train=True, labels=[3, 8], train_val_prop=5./6.):
+def MNIST_limited(root='./Dataset', train=True, labels=[3, 8], train_val_prop=5./6., transform=False):
     """ Takes the regular 10-class MNIST and limits it to a subset, useful for generating the 3 vs. 8 explainer.
 
     Args:
@@ -15,9 +15,11 @@ def MNIST_limited(root='./Dataset', train=True, labels=[3, 8], train_val_prop=5.
         labels (list, optional): The list with permissible labels. Defaults to [3, 8].
         train_val_prop ([type], optional): The proportion of traindata to all available train data.
             Used for finding the train/val split. Defaults to 5./6. as used in paper.
+        transform (boolean, optional): Whether or not to standardize the input data using z-transform.
+            Defaults to False, as it is likely not needed for MNIST.
 
     Returns:
-        MNIST dataset: returns the MNIST dataset with the specified labels.
+        MNIST dataset: returns the MNIST dataset with only the specified labels.
     """
     
     def find_MNIST_stats():
@@ -35,11 +37,14 @@ def MNIST_limited(root='./Dataset', train=True, labels=[3, 8], train_val_prop=5.
     
     MNIST_mean, MNIST_std = find_MNIST_stats()
 
-    transform = transforms.Compose([transforms.ToTensor(),
-                                          transforms.Normalize(
-                                          MNIST_mean, MNIST_std)
-                                          ])
-    
+    if transform == True:
+        transform = transforms.Compose([transforms.ToTensor(),
+                                        transforms.Normalize(
+                                        MNIST_mean, MNIST_std)
+                                        ])
+    else:
+        transform = transforms.Compose([transforms.ToTensor()])
+                                        
     if train:
         dataset = MNIST('./Dataset', train=True, 
                         download=True, transform=transform)

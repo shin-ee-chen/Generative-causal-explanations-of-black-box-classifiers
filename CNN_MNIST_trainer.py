@@ -10,15 +10,18 @@ import pytorch_lightning as pl
 # TODO uncomment LearningRateMonitor once properly implemented
 from pytorch_lightning.callbacks import ModelCheckpoint#, LearningRateMonitor
 
+import tqdm
+
 from MNIST import MNIST_limited
 from CNN import CNN_OShaugnessy
 
-CHECKPOINT_PATH = './Checkpoint'
+# ! This should be handled using arg-parser
+CHECKPOINT_PATH = './Models/MNIST_CNN'
 
 # ! This should be handled using arg-parser
 device = 'cuda:0'
 
-class CNN_MNIST_Trainer(pl.LightningModule):
+class MNIST_CNN_OShaugnessy(pl.LightningModule):
 
     def __init__(self):
         """
@@ -28,7 +31,6 @@ class CNN_MNIST_Trainer(pl.LightningModule):
         # Exports the hyperparameters to a YAML file, and create "self.hparams" namespace
         #self.save_hyperparameters()
 
-        # ! This should be handled using arg-parser
         self.model = CNN_OShaugnessy()
                 
         # Create loss module
@@ -89,9 +91,9 @@ def train_model(save_name=None, **kwargs):
     # ! The batchsize should be handled using arg-parser
     train_loader = data.DataLoader(train_set, batch_size=64, shuffle=True,
                                 drop_last=True, pin_memory=True, num_workers=0)
-    valid_loader = data.DataLoader(valid_set, batch_size=64, shuffle=True,
+    valid_loader = data.DataLoader(valid_set, batch_size=64, shuffle=False,
                                 drop_last=True, pin_memory=True, num_workers=0)
-    test_loader = data.DataLoader(test_set, batch_size=64, shuffle=True,
+    test_loader = data.DataLoader(test_set, batch_size=64, shuffle=False,
                                 drop_last=True, pin_memory=True, num_workers=0)
     
     # ! Max epochs needs to be handled by arg parser.
@@ -118,12 +120,12 @@ def train_model(save_name=None, **kwargs):
     if os.path.isfile(pretrained_filename):
         print("Found pretrained model at %s, loading..." % pretrained_filename)
         # Automatically loads the model with the saved hyperparameters
-        model = CNN_MNIST_Trainer.load_from_checkpoint(pretrained_filename)
+        model = MNIST_CNN_OShaugnessy.load_from_checkpoint(pretrained_filename)
     else:
         pl.seed_everything(42)  # To be reproducable
-        model = CNN_MNIST_Trainer()
+        model = MNIST_CNN_OShaugnessy()
         trainer.fit(model, train_loader, valid_loader)
-        model = CNN_MNIST_Trainer.load_from_checkpoint(
+        model = MNIST_CNN_OShaugnessy.load_from_checkpoint(
             trainer.checkpoint_callback.best_model_path)  # Load best checkpoint after training
 
     # Test best model on validation and test set
@@ -136,4 +138,5 @@ def train_model(save_name=None, **kwargs):
 
     return model, result
 
-CNN_MNIST_model, CNN_MNIST_results = train_model(save_name='test_run')
+if __name__ == 'main':
+    CNN_MNIST_model, CNN_MNIST_results = train_model(save_name='MNIST_CNN')

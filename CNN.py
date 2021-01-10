@@ -27,8 +27,8 @@ class CNN_OShaugnessy(nn.Module):
             nn.MaxPool2d(kernel_size=2),                            # 24x24 -> 23x23
             
             # Linear Layer
-            nn.Flatten(),
             nn.Dropout(p=0.5),
+            nn.Flatten(),
             nn.Linear(in_features=9216, out_features=128),
             nn.ReLU(),
             nn.Dropout(p=0.5),
