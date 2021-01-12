@@ -27,13 +27,15 @@ def CVAE_sweep(model, i=0, rows=8, dataset=None, save_loc=None):
             Must be iterable.
         save_loc (path, optional): The name of the save. Defaults to named variable.
     """
-
+    
     latent_dim = model.K + model.L
     j = i+1
     label = 'alpha_{:d}'.format(
         j) if j <= model.K else 'beta_{:d}'.format(j-model.K)
     sweep_range = range(-3, 3+1, 1)
     colors = ['#FFC209', '#0B7ADC', '#8FC839', 'tab:red']
+    
+    print('CVAE latent variable sweep for', label)
 
     dataloader = data.DataLoader(dataset, batch_size=rows, shuffle=False,
                                  drop_last=True, pin_memory=True, num_workers=0)
@@ -112,7 +114,7 @@ def CVAE_sweep(model, i=0, rows=8, dataset=None, save_loc=None):
     #    save_loc = label
 
     fig_dir = os.path.join(
-        FIGURE_PATH, model.__class__.__name__, str(save_loc))
+        FIGURE_PATH, model.__class__.__name__ + model.classes_str, str(save_loc))
     os.makedirs(fig_dir, exist_ok=True)
     plt.savefig(os.path.join(fig_dir, label+'.png'), bbox_inches='tight')
 

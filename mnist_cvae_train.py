@@ -34,12 +34,15 @@ class GenerateCallback(pl.Callback):
         self.valid_data = valid_data
 
     def on_fit_end(self, trainer, pl_module):
-        self.sweep_and_save(trainer, pl_module, save_loc=trainer.logger._version)
+        """
+        This function is called after finishing training.
+        """
+        if self.every_n_epochs == -1:
+            self.sweep_and_save(trainer, pl_module, save_loc=trainer.logger._version)
     
     def on_epoch_end(self, trainer, pl_module):
         """
         This function is called after every epoch.
-        Call the save_and_sample function every N epochs.
         """
         if self.every_n_epochs == -1:
             pass
@@ -49,6 +52,8 @@ class GenerateCallback(pl.Callback):
                 (trainer.current_epoch + 1) == trainer.max_epochs):
             #self.sample_and_save(trainer, pl_module, trainer.current_epoch+1)
             self.sweep_and_save(trainer, pl_module, save_loc=trainer.logger._version+'_'+trainer.current_epoch)
+            
+        torch.cuda.empty_cache()
 
     def sample_and_save(self, trainer, pl_module, epoch):
         """
@@ -166,7 +171,7 @@ if __name__ == '__main__':
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # Model hyperparameters
-    parser.add_argument('--classes', default=[3, 8],
+    parser.add_argument('--classes', default=[1, 4, 9],
                         type=int, nargs='+',
                         help='The classes permittible for classification')
     parser.add_argument('--classifier_path', type=str, 
@@ -175,13 +180,13 @@ if __name__ == '__main__':
                                 adhered to')
     parser.add_argument('--num_filters', default=64, type=int,
                         help='Number of filters used in the encoders/decoders')
-    parser.add_argument('--K', default=1, type=int,
+    parser.add_argument('--K', default=2, type=int,
                         help='Dimensionality of causal latent space')
-    parser.add_argument('--L', default=7, type=int,
+    parser.add_argument('--L', default=2, type=int,
                         help='Dimensionality of non-causal latent space')
-    parser.add_argument('--M', default=2, type=int,
+    parser.add_argument('--M', default=3, type=int,
                         help='Dimensionality of classifier output')
-    parser.add_argument('--lamb', default=0.05, type=float,
+    parser.add_argument('--lamb', default=0.1, type=float,
                         help='VAE-loss coefficient')
 
     # Loss and optimizer hyperparameters
@@ -214,7 +219,7 @@ if __name__ == '__main__':
                         help='Whether to add the classes to cpt directory.')
 
     # Debug parameters
-    parser.add_argument('--debug', default=True,
+    parser.add_argument('--debug', default=False,
                         help=('Whether to check debugs, etc.'))
     parser.add_argument('--gpu', default=True, action='store_true',
                         help=('Whether to train on GPU (if available) or CPU'))

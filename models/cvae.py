@@ -148,9 +148,10 @@ class MNIST_CVAE(pl.LightningModule):
         self.encoder = CNN_Encoder(img_channels=1, num_filters=num_filters, latent_dim=K + L)
         self.decoder = CNN_Decoder(img_channels=1, num_filters=num_filters, latent_dim=K + L)
         
+        self.classes_str = ''.join(str(x) for x in sorted(classes))
+        
         if classifier_path == None:
-            classes_str = ''.join(str(x) for x in sorted(classes))
-            self.classifier = load_latest(MNIST_CNN, 'mnist_cnn_'+classes_str,
+            self.classifier = load_latest(MNIST_CNN, 'mnist_cnn_'+self.classes_str,
                                         inference=True, map_location=self.device)
         else:
             self.classifier = load_latest(MNIST_CNN, classifier_path,
