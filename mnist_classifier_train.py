@@ -66,8 +66,8 @@ def train(args):
         model, test_dataloaders=valid_loader, verbose=False)
     test_result = trainer.test(
         model, test_dataloaders=test_loader, verbose=False)
-    result = {"Test": test_result[0]["Test_acc"],
-              "Valid": val_result[0]["Valid_acc"]}
+    result = {"Valid": val_result[0]["Test_acc"],
+              "Test": test_result[0]["Test_acc"]}
 
     return model, result
 
