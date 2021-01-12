@@ -84,7 +84,7 @@ def CVAE_sweep(model, i=0, rows=8, dataset=None, save_loc=None):
 
             t = torch.argmax(model.classifier(img[None, :])).item()
 
-            ax.imshow(img.permute(1, 2, 0).cpu().numpy(), cmap='binary',
+            ax.imshow(img.permute(1, 2, 0).cpu().numpy().squeeze(), cmap='binary',
                       vmin=0, vmax=1)
 
             ax.tick_params(axis='both', which='both',
