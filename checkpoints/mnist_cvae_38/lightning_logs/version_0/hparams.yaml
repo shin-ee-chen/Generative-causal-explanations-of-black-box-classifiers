@@ -1,0 +1,10 @@
+K: 1
+L: 7
+M: 2
+Nalpha: 32
+Nbeta: 16
+classifier_name: MNIST_CNN_OShaugnessy
+lamb: 0.05
+lr: 0.0005
+num_filters: 64
+use_ce: true
