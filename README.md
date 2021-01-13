@@ -56,8 +56,8 @@ Ivo Verhoeven
 Testing with fashion MNIST images:
 1. To train CNN classifier:
 ```sh
-   python mnist_classifier_train.py --max_epochs 50 --batch_size 64 --momentum 0.5  --lr 0.1  --classes 0 3 4 
-   --datasets fashion
+   python mnist_classifier_train.py --max_epochs 50 --batch_size 64 --momentum 0.5  --lr 0.1  
+   --classes 0 3 4 --datasets fashion
    ```
 
 2. To train VAE and generate FIgure 17:
