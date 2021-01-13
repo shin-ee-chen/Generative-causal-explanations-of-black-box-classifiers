@@ -21,7 +21,6 @@ def Fashion_MNIST_limited(root='./datasets', train=True, classes=[0, 3, 4], val_
     Returns:
         MNIST dataset: returns the MNIST dataset with only the specified classes.
     """
-    
     def find_MNIST_stats():
         """
         Finds the mean and std for the MNIST training set. Useful for whitening the data.
@@ -50,6 +49,7 @@ def Fashion_MNIST_limited(root='./datasets', train=True, classes=[0, 3, 4], val_
                         download=True, transform=transform)
         test_dataset = FashionMNIST(root, train=False,
                         download=True, transform=transform)
+        
         
         train_set = keep_selected_classes(classes, train_set)
         test_dataset = keep_selected_classes(classes, test_dataset)
@@ -90,5 +90,5 @@ def keep_selected_classes(classes, dataset):
 if __name__ == '__main__':
     train_set, valid_set = Fashion_MNIST_limited()
     test_set = Fashion_MNIST_limited(train=False)
-    print(len(valid_set))
-    print(len(test_set))
+    print(len(train_set))
+    # print(len(test_set))

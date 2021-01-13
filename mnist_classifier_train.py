@@ -34,7 +34,6 @@ def train(args):
     else:
         train_set, valid_set = Fashion_MNIST_limited(train=True, classes=args.classes)
         test_set = Fashion_MNIST_limited(train=False, classes=args.classes)
-        print(f"train_set:{len(train_set)}")
 
     train_loader = data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True,
                                    drop_last=True, pin_memory=True, num_workers=0)
@@ -85,9 +84,8 @@ if __name__ == '__main__':
     parser.add_argument('--clf_param_set', default='OShaugnessy',
                         type=str, help='The black-box classifier we wish to explain.')
     
-    # bug: type should be list? 
     parser.add_argument('--classes', default=[3, 8],
-                        type=list, nargs='+', 
+                        type=int, nargs='+', 
                         help='The classes permittible for classification')
     
     # Loss and optimizer hyperparameters

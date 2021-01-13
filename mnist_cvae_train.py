@@ -12,6 +12,8 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 
 from models.cvae import MNIST_CVAE
 from datasets.mnist import MNIST_limited
+from datasets.fashion_mnist import Fashion_MNIST_limited
+
 from utils.cvae_latent_visualization import CVAE_sweep
 from utils.reproducibility import set_seed, set_deteministic, load_latest
 
@@ -116,8 +118,15 @@ def train(args):
     os.makedirs(full_log_dir, exist_ok=True)
 
     # Handling the training
-    train_set, valid_set = MNIST_limited(train=True, classes=args.classes)
-    test_set = MNIST_limited(train=False, classes=args.classes)
+    # train_set, valid_set = MNIST_limited(train=True, classes=args.classes)
+    # test_set = MNIST_limited(train=False, classes=args.classes)
+    if args.datasets == 'traditional':
+        train_set, valid_set = MNIST_limited(train=True, classes=args.classes)
+        test_set = MNIST_limited(train=False, classes=args.classes)
+    else:
+        train_set, valid_set = Fashion_MNIST_limited(train=True, classes=args.classes)
+        test_set = Fashion_MNIST_limited(train=False, classes=args.classes)
+        print(f"train_set:{len(train_set)}")
 
     train_loader = data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True,
                                    drop_last=True, pin_memory=True, num_workers=0)
@@ -217,6 +226,8 @@ if __name__ == '__main__':
                             the classes to directory. If not needed, turn off using add_classes_to_cpt_path flag.')
     parser.add_argument('--add_classes_to_cpt_path', default=True,
                         help='Whether to add the classes to cpt directory.')
+    parser.add_argument('--datasets', default='traditional',choices=['traditional', 'fashion'],
+                        help='Datasets used for training: traditional or fashion')
 
     # Debug parameters
     parser.add_argument('--debug', default=False,
