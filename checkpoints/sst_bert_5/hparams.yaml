@@ -1,0 +1,4 @@
+M: 5
+decay: 0.95
+dropout: 0.1
+lr: 0.001

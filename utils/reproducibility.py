@@ -1,6 +1,6 @@
 import os
 import random
-import numpy as np 
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -21,13 +21,13 @@ def set_seed(seed):
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
     pl.seed_everything(seed)
-    
 
-def set_deteministic():
+
+def set_deterministic():
     torch.backends.cudnn.determinstic = True
     torch.backends.cudnn.benchmark = False
-    
-    
+
+
 def load_latest(trainer, save_name, inference=False, map_location=None):
     """Loads the last found model from the checkpoints directory
 
@@ -42,7 +42,7 @@ def load_latest(trainer, save_name, inference=False, map_location=None):
         save_loc = os.path.join(
             CHECKPOINT_PATH, save_name, 'lightning_logs')
         latest_version = os.listdir(save_loc)[-1]
-        print(os.path.join(save_loc, latest_version, 'checkpoints'), 
+        print(os.path.join(save_loc, latest_version, 'checkpoints'),
               os.listdir(os.path.join(save_loc, latest_version, 'checkpoints')))
         cpt = os.listdir(os.path.join(
             save_loc, latest_version, 'checkpoints'))[-1]

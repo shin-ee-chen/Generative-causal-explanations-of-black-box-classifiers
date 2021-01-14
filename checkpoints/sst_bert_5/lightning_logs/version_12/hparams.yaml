@@ -1,0 +1,7 @@
+M: 5
+dropout: 0.1
+layer_decay: 0.95
+lr: 2.0e-05
+max_lr_rate: 32
+steps_per_cycle: 1068
+warm_up: 0.1

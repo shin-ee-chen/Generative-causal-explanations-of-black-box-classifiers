@@ -13,7 +13,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from models.cvae import MNIST_CVAE
 from datasets.mnist import MNIST_limited
 from utils.cvae_latent_visualization import CVAE_sweep
-from utils.reproducibility import set_seed, set_deteministic, load_latest
+from utils.reproducibility import set_seed, set_deterministic, load_latest
 
 CHECKPOINT_PATH = './checkpoints'
 
@@ -125,7 +125,7 @@ def train(args):
                                    drop_last=True, pin_memory=True, num_workers=0)
     test_loader = data.DataLoader(test_set, batch_size=args.batch_size, shuffle=False,
                                   drop_last=True, pin_memory=True, num_workers=0)
-    
+
     gen_callback = GenerateCallback(batch_size=8, save_to_disk=True, every_n_epochs=args.sample_every, valid_data=valid_set)
 
     trainer = pl.Trainer(default_root_dir=full_log_dir,
@@ -142,7 +142,7 @@ def train(args):
     trainer.logger._default_hp_metric = None
 
     set_seed(42)
-    set_deteministic()
+    set_deterministic()
 
     if args.debug:
         trainer.logger._version =  'debug' # str(args.model) + '_' + str(args.z_dim) + '_' + str(args.seed)

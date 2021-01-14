@@ -91,11 +91,11 @@ class MNIST_CNN(pl.LightningModule):
         preds = self.model(imgs).argmax(dim=-1)
         acc = (labels == preds).float().mean()
 
-        self.log('Valid_acc', acc)
+        self.log('Valid acc', acc)
 
     def test_step(self, batch, batch_idx):
         imgs, labels = batch
         preds = self.model(imgs).argmax(dim=-1)
         acc = (labels == preds).float().mean()
 
-        self.log('Test_acc', acc)
+        self.log('Test acc', acc)

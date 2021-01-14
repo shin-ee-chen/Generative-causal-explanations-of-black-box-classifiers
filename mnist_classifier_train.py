@@ -7,7 +7,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 import torch.utils.data as data
 
 from models.mnist_cnn import MNIST_CNN
-from utils.reproducibility import set_seed, set_deteministic
+from utils.reproducibility import set_seed, set_deterministic
 from datasets.mnist import MNIST_limited
 from datasets.fashion_mnist import Fashion_MNIST_limited
 
@@ -18,14 +18,14 @@ def train(args):
     Inputs:
         args - Namespace object from the argparser
     """
-    
+
     if args.add_classes_to_cpt_path == True:
         classes_str = ''.join(str(x) for x in sorted(args.classes))
         full_log_dir = os.path.join(CHECKPOINT_PATH, args.log_dir + '_' + classes_str)
     else:
         full_log_dir = os.path.join(CHECKPOINT_PATH, args.log_dir)
     os.makedirs(full_log_dir, exist_ok=True)
-    
+
     M = len(args.classes)
 
     if args.datasets == 'traditional':
@@ -57,12 +57,12 @@ def train(args):
     trainer.logger._default_hp_metric = None
 
     set_seed(42)
-    set_deteministic()
+    set_deterministic()
 
-    model = MNIST_CNN(model_param_set=args.clf_param_set, M=M, 
+    model = MNIST_CNN(model_param_set=args.clf_param_set, M=M,
                         lr=args.lr, momentum=args.momentum)
     trainer.fit(model, train_loader, valid_loader)
-    
+
     # Eval post training
     model = MNIST_CNN.load_from_checkpoint(
         trainer.checkpoint_callback.best_model_path)
@@ -84,12 +84,12 @@ if __name__ == '__main__':
     # Model hyperparameters
     parser.add_argument('--clf_param_set', default='OShaugnessy',
                         type=str, help='The black-box classifier we wish to explain.')
-    
+
     # bug: type should be list? 
     parser.add_argument('--classes', default=[3, 8],
-                        type=list, nargs='+', 
+                        type=list, nargs='+',
                         help='The classes permittible for classification')
-    
+
     # Loss and optimizer hyperparameters
     parser.add_argument('--lr', default=5e-4, type=float,
                         help='Learning rate to use')
@@ -128,5 +128,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     model, results = train(args)
-    
+
     print(results)
