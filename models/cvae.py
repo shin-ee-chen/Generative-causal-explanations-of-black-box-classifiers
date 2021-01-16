@@ -137,26 +137,35 @@ class MNIST_CVAE(pl.LightningModule):
         self.L = L
         self.M = M
         self.lamb = lamb
-    
+
         self.latent_dim = self.K + self.L
 
         self.Nalpha = Nalpha
         self.Nbeta = Nbeta
         self.lr = lr
         self.betas = tuple(betas)
-                
+
+        self.ceparams = {
+          'Nalpha'           : Nalpha,
+          'Nbeta'            : Nbeta,
+          'K'                : K,
+          'L'                : L,
+          'z_dim'            : K+L,
+          'M'                : M
+         }
+
         self.encoder = CNN_Encoder(img_channels=1, num_filters=num_filters, latent_dim=K + L)
         self.decoder = CNN_Decoder(img_channels=1, num_filters=num_filters, latent_dim=K + L)
-        
+
         self.classes_str = ''.join(str(x) for x in sorted(classes))
-        
+
         if classifier_path == None:
             self.classifier = load_latest(MNIST_CNN, 'mnist_cnn_'+self.classes_str,
                                         inference=True, map_location=self.device)
         else:
             self.classifier = load_latest(MNIST_CNN, classifier_path,
                                          inference=True, map_location=self.device)
-            
+
 
     def forward(self, imgs):
         """
@@ -195,6 +204,15 @@ class MNIST_CVAE(pl.LightningModule):
         C, debug = joint_uncond(*CVAE_to_params(self))
 
         return C
+
+    def information_flow_single(self, dims):
+        ceparams = self.ceparams.copy()
+        ndims = len(dims)
+        Is = np.zeros(ndims)
+        for (i, dim) in enumerate(dims):
+            negI, _ = joint_uncond(*CVAE_to_params(self))
+            Is[i] = negI
+        return Is
 
     def configure_optimizers(self):
 
