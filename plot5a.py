@@ -10,6 +10,89 @@ from models.mnist_cnn import MNIST_CNN
 from utils.reproducibility import set_seed, set_deteministic
 from datasets.mnist import MNIST_limited
 
+from models.cvae import MNIST_CVAE
+class GenerateCallback(pl.Callback):
+
+    def __init__(self, batch_size, every_n_epochs, save_to_disk, valid_data=None):
+        """
+        Inputs:
+            batch_size - Number of images to generate
+            every_n_epochs - Only save those images every N epochs (otherwise tensorboard gets quite large)
+            save_to_disk - If True, the samples and image means should be saved to disk as well.
+        """
+        super().__init__()
+        self.batch_size = batch_size
+        self.every_n_epochs = every_n_epochs
+        self.save_to_disk = save_to_disk
+
+        self.valid_data = valid_data
+
+    def on_fit_end(self, trainer, pl_module):
+        """
+        This function is called after finishing training.
+        """
+        if self.every_n_epochs == -1:
+            self.sweep_and_save(trainer, pl_module, save_loc=trainer.logger._version)
+
+    def on_epoch_end(self, trainer, pl_module):
+        """
+        This function is called after every epoch.
+        """
+        if self.every_n_epochs == -1:
+            pass
+
+        elif ((trainer.current_epoch + 1) % self.every_n_epochs == 0 or
+            trainer.current_epoch == 0 or
+                (trainer.current_epoch + 1) == trainer.max_epochs):
+            #self.sample_and_save(trainer, pl_module, trainer.current_epoch+1)
+            self.sweep_and_save(trainer, pl_module, save_loc=trainer.logger._version+'_'+trainer.current_epoch)
+
+        torch.cuda.empty_cache()
+
+    def sample_and_save(self, trainer, pl_module, epoch):
+        """
+        Function that generates and save samples from the VAE.
+        The generated samples and mean images should be added to TensorBoard and,
+        if self.save_to_disk is True, saved inside the logging directory.
+        Inputs:
+            trainer - The PyTorch Lightning "Trainer" object.
+            pl_module - The VAE model that is currently being trained.
+            epoch - The epoch number to use for TensorBoard logging and saving of the files.
+        """
+
+        imgs, _ = pl_module.sample(64)
+
+        if self.save_to_disk:
+            save_image(imgs, trainer.logger.log_dir + '/epoch{:d}.png'.format(epoch),
+                       nrow=8)
+
+        img_grid = make_grid(imgs, nrow=8)
+        img_grid = img_grid.mul(255).add_(
+            0.5).clamp_(0, 255)  # .permute(1, 2, 0)
+        img_grid = img_grid.type(torch.ByteTensor).numpy()
+
+        trainer.logger.experiment.add_image('Generated Digits',
+                                            img_grid, epoch)
+
+        return img_grid
+
+    def sweep_and_save(self, trainer, pl_module, save_loc):
+        """
+        Function that sweeps over all latent variables and saves samples from the VAE.
+        The generated samples and mean images should be added to TensorBoard and,
+        if self.save_to_disk is True, saved inside the logging directory.
+        Inputs:
+            trainer - The PyTorch Lightning "Trainer" object.
+            pl_module - The VAE model that is currently being trained.
+        """
+
+        img_grid = []
+        for i in range(pl_module.K + pl_module.L):
+            img_grid.append(
+                CVAE_sweep(pl_module, i=i, rows=self.batch_size,
+                           dataset=self.valid_data, save_loc=save_loc)
+            )
+
 def train(args):
     """
     Inputs:
@@ -32,7 +115,7 @@ def train(args):
                         lr=args.lr, momentum=args.momentum)
     trainer.fit(model, train_loader, valid_loader)
 
-    # Eval post training
+    # load classifier
     classifier = MNIST_CNN.load_from_checkpoint(
         trainer.checkpoint_callback.best_model_path)
 
@@ -40,20 +123,12 @@ def train(args):
     checkpoint_model = torch.load(os.path.join(classifier_path,'model.pt'), map_location=device)
     classifier.load_state_dict(checkpoint_model['model_state_dict_classifier'])
 
-    # Test results
-    val_result = trainer.test(
-        model, test_dataloaders=valid_loader, verbose=False)
-    test_result = trainer.test(
-        model, test_dataloaders=test_loader, verbose=False)
-    result = {"Test": test_result[0]["Test_acc"],
-              "Valid": val_result[0]["Test_acc"]}
-    save_folder = './pretrained_models/'+ args.log_dir + '/'
+    # load GCE
+    gce_path = './pretrained_models/mnist_cvae/'
+    gce = torch.load(os.path.join(gce_path,'model.pt'), map_location=device)
 
-    torch.save({
-    'model_state_dict_classifier': model.state_dict()
-        }, os.path.join(save_folder, 'model.pt'))
 
-    return model, result
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

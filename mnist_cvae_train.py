@@ -163,11 +163,9 @@ def train(args):
     test_result = trainer.test(
         model, test_dataloaders=test_loader, verbose=True)
 
-    save_folder = './pretrained_models/'+ args.log_dir + '/'
+    gce_path = './pretrained_models/'+ args.log_dir + '/'
 
-    torch.save({
-    'model_state_dict_classifier': model.state_dict()
-        }, os.path.join(save_folder, 'model.pt'))
+    torch.save(model, os.path.join(gce_path,'model.pt'))
 
     return test_result, trainer
 
