@@ -6,7 +6,7 @@ from models.mnist_cnn import MNIST_CNN
 from utils.reproducibility import load_latest
 from utils.vae_loss import sample_reparameterize, ELBO, ELBO_to_BPD
 from utils.information_flow import CVAE_to_params, joint_uncond
-
+import numpy as np
 
 class CNN_Encoder(nn.Module):
     def __init__(self, img_channels: int = 1, num_filters: int = 64,
@@ -145,14 +145,7 @@ class MNIST_CVAE(pl.LightningModule):
         self.lr = lr
         self.betas = tuple(betas)
 
-        self.ceparams = {
-          'Nalpha'           : Nalpha,
-          'Nbeta'            : Nbeta,
-          'K'                : K,
-          'L'                : L,
-          'z_dim'            : K+L,
-          'M'                : M
-         }
+
 
         self.encoder = CNN_Encoder(img_channels=1, num_filters=num_filters, latent_dim=K + L)
         self.decoder = CNN_Decoder(img_channels=1, num_filters=num_filters, latent_dim=K + L)
@@ -206,6 +199,14 @@ class MNIST_CVAE(pl.LightningModule):
         return C
 
     def information_flow_single(self, dims):
+        self.ceparams = {
+          'Nalpha'           : self.Nalpha,
+          'Nbeta'            : self.Nbeta,
+          'K'                : self.K,
+          'L'                : self.L,
+          'z_dim'            : self.K+self.L,
+          'M'                : self.M
+        }
         ceparams = self.ceparams.copy()
         ndims = len(dims)
         Is = np.zeros(ndims)

@@ -11,6 +11,10 @@ from utils.reproducibility import set_seed, set_deteministic
 from datasets.mnist import MNIST_limited
 
 from models.cvae import MNIST_CVAE
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+import matplotlib.pyplot as plt
+
 class GenerateCallback(pl.Callback):
 
     def __init__(self, batch_size, every_n_epochs, save_to_disk, valid_data=None):
@@ -111,13 +115,11 @@ def train(args):
     test_loader = data.DataLoader(test_set, batch_size=args.batch_size, shuffle=False,
                                   drop_last=True, pin_memory=True, num_workers=0)
 
-    model = MNIST_CNN(model_param_set=args.clf_param_set, M=M,
-                        lr=args.lr, momentum=args.momentum)
-    trainer.fit(model, train_loader, valid_loader)
+
 
     # load classifier
-    classifier = MNIST_CNN.load_from_checkpoint(
-        trainer.checkpoint_callback.best_model_path)
+    classifier = MNIST_CNN(model_param_set=args.clf_param_set, M=M,
+                        lr=args.lr, momentum=args.momentum)
 
     classifier_path = './pretrained_models/mnist_cnn/'
     checkpoint_model = torch.load(os.path.join(classifier_path,'model.pt'), map_location=device)
@@ -127,7 +129,24 @@ def train(args):
     gce_path = './pretrained_models/mnist_cvae/'
     gce = torch.load(os.path.join(gce_path,'model.pt'), map_location=device)
 
+    # plot information_flow
+    z_dim = args.K + args.L
+    info_flow = gce.information_flow_single(range(0,z_dim))
 
+    cols = {'golden_poppy' : [1.000,0.761,0.039],
+        'bright_navy_blue' : [0.047,0.482,0.863],
+        'rosso_corsa' : [0.816,0.000,0.000]}
+    x_labels = ('$\\alpha_1$', '$\\alpha_2$', '$\\beta_1$', '$\\beta_2$')
+    fig, ax = plt.subplots()
+    ax.bar(range(z_dim), info_flow, color=[
+        cols['rosso_corsa'], cols['rosso_corsa'], cols['bright_navy_blue'],
+        cols['bright_navy_blue']])
+    plt.xticks(range(z_dim), x_labels)
+    ax.yaxis.grid(linewidth='0.3')
+    plt.ylabel('Information flow to $\\widehat{Y}$')
+    plt.title('Information flow of individual causal factors')
+    plt.savefig('./figures/fig5a.svg')
+    plt.savefig('./figures/fig5a.pdf')
 
 
 if __name__ == '__main__':
@@ -175,8 +194,14 @@ if __name__ == '__main__':
     parser.add_argument('--gpu', default=True, action='store_true',
                         help=('Whether to train on GPU (if available) or CPU'))
 
+    # param for cvae
+    parser.add_argument('--K', default=2, type=int,
+                       help='Dimensionality of causal latent space')
+    parser.add_argument('--L', default=2, type=int,
+                       help='Dimensionality of non-causal latent space')
+    parser.add_argument('--M', default=3, type=int,
+                       help='Dimensionality of classifier output')
+
     args = parser.parse_args()
 
-    model, results = train(args)
-
-    print(results)
+    train(args)
