@@ -194,7 +194,7 @@ if __name__ == '__main__':
                         help='VAE-loss coefficient')
 
     # Loss and optimizer hyperparameters
-    parser.add_argument('--max_steps', default=20, type=int,
+    parser.add_argument('--max_steps', default=50, type=int,
                         help='Max number of training batches')
     parser.add_argument('--lr', default=5e-4, type=float,
                         help='Learning rate to use')

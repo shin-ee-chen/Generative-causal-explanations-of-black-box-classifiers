@@ -83,7 +83,7 @@ if __name__ == '__main__':
     # Model hyperparameters
     parser.add_argument('--clf_param_set', default='OShaugnessy',
                         type=str, help='The black-box classifier we wish to explain.')
-    parser.add_argument('--classes', default=[3, 8],
+    parser.add_argument('--classes', default=[1,4,9],
                         type=int, nargs='+',
                         help='The classes permittible for classification')
 
@@ -94,7 +94,7 @@ if __name__ == '__main__':
                         help='Learning rate to use')
     parser.add_argument('--batch_size', default=64, type=int,
                         help='Minibatch size')
-    parser.add_argument('--max_epochs', default=1, type=int,
+    parser.add_argument('--max_epochs', default=5, type=int,
                         help='Max number of training epochs')
 
     # Other hyperparameters
