@@ -186,7 +186,7 @@ def train(args):
 
     # plot information_flow
     z_dim = args.K + args.L
-    info_flow = gce.information_flow_single(range(0,z_dim))
+    info_flow = -gce.information_flow_single(range(0,z_dim))
 
     cols = {'golden_poppy' : [1.000,0.761,0.039],
         'bright_navy_blue' : [0.047,0.482,0.863],
@@ -317,7 +317,7 @@ if __name__ == '__main__':
                         help='Learning rate to use')
     parser.add_argument('--batch_size', default=64, type=int,
                         help='Minibatch size')
-    parser.add_argument('--max_epochs', default=1, type=int,
+    parser.add_argument('--max_epochs', default=50, type=int,
                         help='Max number of training epochs')
 
     # Other hyperparameters
