@@ -6,14 +6,14 @@ from torchvision.datasets import FashionMNIST
 
 import torch.utils.data as data
 
-def Fashion_MNIST_limited(root='./datasets', train=True, classes=[0, 3, 4], val_test_prop=6./10., transform=False):
+def Fashion_MNIST_limited(root='./datasets', train=True, classes=[0, 3, 4], test_val_prop=4./10., transform=False):
     """ Takes the regular 10-class MNIST and limits it to a subset, useful for generating the 3 vs. 8 explainer.
 
     Args:
         root (str, optional): Gives the directory with the MNIST files. Defaults to './Dataset'.
         train (bool, optional): Whether to get train or test set. Defaults to True.
         classes (list, optional): The list with permissible labels. Defaults to [0, 3, 4]/‘t-shirt/top,’ ‘dress,’ and ‘coat’.
-        val_test_prop ([type], optional): The proportion of valid data to all available test data.
+        test_val_prop ([type], optional): The proportion of valid data to all available test data.
             Used for finding the val/test split. Defaults to 6./10. as used in paper.
         transform (boolean, optional): Whether or not to standardize the input data using z-transform.
             Defaults to False, as it is likely not needed for MNIST.
@@ -49,31 +49,25 @@ def Fashion_MNIST_limited(root='./datasets', train=True, classes=[0, 3, 4], val_
                         download=True, transform=transform)
         test_dataset = FashionMNIST(root, train=False,
                         download=True, transform=transform)
-        
-        
+
         train_set = keep_selected_classes(classes, train_set)
         test_dataset = keep_selected_classes(classes, test_dataset)
 
-    else:
-        dataset = FashionMNIST(root, train=False,
-                        download=True, transform=transform)
-        dataset = keep_selected_classes(classes, dataset)
-        
-    
-        
-    if train:
-        valid_range = range(0, int(val_test_prop * len(test_dataset)))
-        # valid_range = range(int(val_test_prop * len(dataset)),  len(dataset))
-        # train_set = torch.utils.data.Subset(dataset, train_range).dataset
-        valid_set = torch.utils.data.Subset(test_dataset, valid_range).dataset
-        
-        return train_set, valid_set
-    
-    else:
-        test_range = range(int(val_test_prop * len(dataset)),  len(dataset))
-        test_set = torch.utils.data.Subset(dataset, test_range).dataset
+        valid_range = range(int(test_val_prop * len(test_dataset)),  len(test_dataset))
+        valid_set = torch.utils.data.Subset(test_dataset, valid_range)
 
-        return test_set 
+        return train_set, valid_set
+
+    else:
+        test_dataset = FashionMNIST(root, train=False,
+                        download=True, transform=transform)
+        test_dataset = keep_selected_classes(classes, test_dataset)
+
+        test_range = range(0, int(test_val_prop * len(test_dataset)))
+        test_set = torch.utils.data.Subset(test_dataset, test_range)
+        
+        return test_set
+    
 
 
 def keep_selected_classes(classes, dataset):
@@ -90,5 +84,5 @@ def keep_selected_classes(classes, dataset):
 if __name__ == '__main__':
     train_set, valid_set = Fashion_MNIST_limited()
     test_set = Fashion_MNIST_limited(train=False)
-    print(len(train_set))
-    # print(len(test_set))
+    print(len(valid_set))
+    print(len(test_set))
