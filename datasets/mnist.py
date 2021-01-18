@@ -21,11 +21,11 @@ def MNIST_limited(root='./datasets', train=True, classes=[3, 8], train_val_prop=
     Returns:
         MNIST dataset: returns the MNIST dataset with only the specified classes.
     """
-    
+
     def find_MNIST_stats():
         """
         Finds the mean and std for the MNIST training set. Useful for whitening the data.
-        
+
         """
 
         train_set = MNIST(root, train=True, download=True)
@@ -34,7 +34,7 @@ def MNIST_limited(root='./datasets', train=True, classes=[3, 8], train_val_prop=
         MNIST_std = (train_set.data / 255.0).std(axis=(0, 1, 2))
 
         return MNIST_mean, MNIST_std
-    
+
     MNIST_mean, MNIST_std = find_MNIST_stats()
 
     if transform == True:
@@ -44,21 +44,21 @@ def MNIST_limited(root='./datasets', train=True, classes=[3, 8], train_val_prop=
                                         ])
     else:
         transform = transforms.Compose([transforms.ToTensor()])
-                                        
+
     if train:
         dataset = MNIST(root, train=True,
                         download=True, transform=transform)
     else:
         dataset = MNIST(root, train=False,
                         download=True, transform=transform)
-        
+
     idx = [y in classes for y in dataset.targets]
     dataset.data = dataset.data[idx]
     dataset.targets = dataset.targets[idx]
-    
+
     for new_t, old_t in enumerate(classes):
         dataset.targets[dataset.targets == old_t] = new_t
-        
+
     if train:
 
         train_range = range(0, int(train_val_prop * len(dataset)))
@@ -66,7 +66,7 @@ def MNIST_limited(root='./datasets', train=True, classes=[3, 8], train_val_prop=
 
         train_set = torch.utils.data.Subset(dataset, train_range).dataset
         valid_set = torch.utils.data.Subset(dataset, valid_range).dataset
-    
+
         return train_set, valid_set
 
     return dataset

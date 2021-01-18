@@ -85,7 +85,7 @@ if __name__ == '__main__':
     parser.add_argument('--clf_param_set', default='OShaugnessy',
                         type=str, help='The black-box classifier we wish to explain.')
 
-    # bug: type should be list? 
+    # bug: type should be list?
     parser.add_argument('--classes', default=[3, 8],
                         type=list, nargs='+',
                         help='The classes permittible for classification')

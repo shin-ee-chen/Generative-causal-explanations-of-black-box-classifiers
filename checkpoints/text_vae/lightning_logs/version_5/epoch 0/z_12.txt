@@ -1,0 +1,8 @@
+# Sweep over z_12
+-3.00: It a a but . but . but . but . but . . . . . . . . . . . . . . . . . .
+-2.00: It a a but . but . but . but . but . . . . . . . . . . . . . . . . . .
+-1.00: It a a but . but . but . but . but . . . . . . . . . . . . . . . . . .
++0.00: It a a but . but . but . but . but . . . . . . . . . . . . . . . . . .
++1.00: It a a but . but . but . but . but . . . . . . . . . . . . . . . . . .
++2.00: It a a but . but . but . but . but . . . . . . . . . . . . . . . . . .
++3.00: It a a but . but . but . but . but . . . . . . . . . . . . . . . . . .

@@ -1,0 +1,8 @@
+# Sweep over z_10
+-3.00: One of the best of the best of the story , and the story is a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+-2.00: One of the best of the best of the story , and the story is a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+-1.00: One of the best of the best of the story , and the story is a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
++0.00: One of the best of the best of the story , and the story is a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
++1.00: One of the best of the best of the story , and the story is a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
++2.00: One of the best of the best of the story , and the story is a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
++3.00: One of the best of the best of the story , and the story is a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>

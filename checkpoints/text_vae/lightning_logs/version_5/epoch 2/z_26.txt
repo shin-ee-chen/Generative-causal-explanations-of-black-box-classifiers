@@ -1,0 +1,8 @@
+# Sweep over z_26
+-3.00: One of the director is a lot of a movie that it 's not as well as a lot of a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad>
+-2.00: One of the director is a lot of a movie that it 's not as well as a lot of a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad>
+-1.00: One of the director is a lot of a movie that it 's not as well as a lot of a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad>
++0.00: One of the director is a lot of a movie that it 's not as well as a lot of a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad>
++1.00: One of the director is a lot of a movie that it 's not as well as a lot of a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad>
++2.00: One of the director is a lot of a movie that it 's not as well as a lot of a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad>
++3.00: One of the director is a lot of a movie that it 's not as well as a lot of a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad>

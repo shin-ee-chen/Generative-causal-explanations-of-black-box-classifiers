@@ -1,0 +1,8 @@
+# Sweep over z_19
+-3.00: One of the best of the story is a lot of a movie , but the director is a lot of a lot of a lot of the story 's
+-2.00: One of the best of the story is a lot of a movie , but the director is a lot of a lot of a lot of the story 's
+-1.00: One of the best of the story is a lot of a movie , but the director is a lot of a lot of a lot of the story 's
++0.00: One of the best of the story is a lot of a movie , but the director is a lot of a lot of a lot of the story 's
++1.00: One of the best of the story is a lot of a movie , but the director is a lot of a lot of a lot of the story 's
++2.00: One of the best of the story is a lot of a movie , but the director is a lot of a lot of a lot of the story 's
++3.00: One of the best of the story is a lot of a movie , but the director is a lot of a lot of a lot of the story 's

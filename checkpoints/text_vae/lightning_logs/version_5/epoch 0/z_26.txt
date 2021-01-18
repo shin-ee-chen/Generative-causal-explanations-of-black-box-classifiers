@@ -1,0 +1,8 @@
+# Sweep over z_26
+-3.00: A a a the the the the the the the the the the the the the . . . . . . . . . . . . . .
+-2.00: A a a the the the the the the the the the the the the the . . . . . . . . . . . . . .
+-1.00: A a a the the the the the the the the the the the the the . . . . . . . . . . . . . .
++0.00: A a a the the the the the the the the the the the the the . . . . . . . . . . . . . .
++1.00: A a a the the the the the the the the the the the the the . . . . . . . . . . . . . .
++2.00: A a a the the the the the the the the the the the the the . . . . . . . . . . . . . .
++3.00: A a a the the the the the the the the the the the the the . . . . . . . . . . . . . .

@@ -1,0 +1,8 @@
+# Sweep over z_13
+-3.00: It 's not as a lot of a movie that it 's not as a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+-2.00: It 's not as a lot of a movie that it 's not as a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+-1.00: It 's not as a lot of a movie that it 's not as a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
++0.00: It 's not as a lot of a movie that it 's not as a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
++1.00: It 's not as a lot of a movie that it 's not as a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
++2.00: It 's not as a lot of a movie that it 's not as a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
++3.00: It 's not as a lot of a movie that it 's not as a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>

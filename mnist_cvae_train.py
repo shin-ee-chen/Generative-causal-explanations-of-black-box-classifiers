@@ -39,7 +39,7 @@ class GenerateCallback(pl.Callback):
         """
         if self.every_n_epochs == -1:
             self.sweep_and_save(trainer, pl_module, save_loc=trainer.logger._version)
-    
+
     def on_epoch_end(self, trainer, pl_module):
         """
         This function is called after every epoch.
@@ -52,7 +52,7 @@ class GenerateCallback(pl.Callback):
                 (trainer.current_epoch + 1) == trainer.max_epochs):
             #self.sample_and_save(trainer, pl_module, trainer.current_epoch+1)
             self.sweep_and_save(trainer, pl_module, save_loc=trainer.logger._version+'_'+trainer.current_epoch)
-            
+
         torch.cuda.empty_cache()
 
     def sample_and_save(self, trainer, pl_module, epoch):
@@ -105,7 +105,7 @@ def train(args):
     Inputs:
         args - Namespace object from the argument parser
     """
-       
+
     assert len(args.classes) == args.M
 
     if args.add_classes_to_cpt_path == True:
@@ -137,7 +137,7 @@ def train(args):
                          callbacks=[gen_callback],
                          progress_bar_refresh_rate=5 if args.progress_bar else 0,
                          fast_dev_run=args.debug
-                         )
+                        )
 
     trainer.logger._default_hp_metric = None
 
@@ -159,7 +159,7 @@ def train(args):
     # Eval post training
     model = MNIST_CVAE.load_from_checkpoint(
         trainer.checkpoint_callback.best_model_path)
-    
+
     test_result = trainer.test(
         model, test_dataloaders=test_loader, verbose=True)
 
@@ -174,7 +174,7 @@ if __name__ == '__main__':
     parser.add_argument('--classes', default=[1, 4, 9],
                         type=int, nargs='+',
                         help='The classes permittible for classification')
-    parser.add_argument('--classifier_path', type=str, 
+    parser.add_argument('--classifier_path', type=str,
                         help='This is the directory INSIDE of models where pre-trained \
                             black-box classifier is. Necessary if naming convention is not \
                                 adhered to')
@@ -227,4 +227,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     test_result, trainer = train(args)
-    
+

@@ -11,13 +11,12 @@ import torch
 import torchtext
 import torchtext.data as data
 from torchtext.data import Dataset, Field
-from transformers import SqueezeBertTokenizerFast
 
-tokenizer = SqueezeBertTokenizerFast.from_pretrained('squeezebert/squeezebert-mnli-headless')
-
-MAX_SEQ_LEN = 80 # Tested on training dataset
-PAD_INDEX = tokenizer.convert_tokens_to_ids(tokenizer.pad_token)
-UNK_INDEX = tokenizer.convert_tokens_to_ids(tokenizer.unk_token)
+MAX_SEQ_LEN = 82 # Tested on training dataset
+PAD_TOKEN = '<pad>'
+UNK_TOKEN = '<unk>'
+INIT_TOKEN = '<s>'
+EOS_TOKEN = '<\s>'
 
 class SST(data.Dataset):
 
@@ -59,7 +58,13 @@ class SST(data.Dataset):
                             data.Example.fromtree(line, fields, True)]
             else:
                 examples = [data.Example.fromtree(line, fields) for line in f]
-        super(SST, self).__init__(examples, fields, **kwargs)
+
+        if fine_grained:
+            filter_pred = lambda ex: ex.label in ['negative', 'positive']
+        else:
+            filter_pred = None
+
+        super(SST, self).__init__(examples, fields, filter_pred)
 
     @ classmethod
     def splits(cls, text_field, label_field, root='./datasets',
@@ -98,7 +103,7 @@ class SST(data.Dataset):
                      if d is not None)
 
     @ classmethod
-    def iters(cls, batch_size=32, device=None, root='./datasets', repeat=True, **kwargs):
+    def iters(cls, batch_size=32, device=None, root='./datasets', repeat=True, vectors=None, **kwargs):
         """Create iterator objects for splits of the SST dataset.
 
             Arguments:
@@ -113,14 +118,22 @@ class SST(data.Dataset):
                 Remaining keyword arguments: Passed to the splits method.
             """
 
-        LABEL = Field(sequential=False, batch_first=True, is_target=True)
-        TEXT = Field(use_vocab=False, tokenize=tokenizer.encode, lower=False, include_lengths=False,
-                     batch_first=True, fix_length=MAX_SEQ_LEN, pad_token=PAD_INDEX, unk_token=UNK_INDEX)
+        LABEL = Field(sequential=False, batch_first=False, is_target=True)
+        TEXT = Field(use_vocab=True, lower=True, include_lengths=False,
+                     batch_first=False, fix_length=MAX_SEQ_LEN,
+                     pad_token=PAD_TOKEN, unk_token=UNK_TOKEN,
+                     init_token=INIT_TOKEN, eos_token=EOS_TOKEN)
 
         train, val, test = cls.splits(TEXT, LABEL, root=root, **kwargs)
 
         LABEL.build_vocab(train, specials_first=False)
-        #print(LABEL.vocab_cls.itos)
+        if vectors != None:
+            TEXT.build_vocab(train, specials_first=True, vectors=vectors)
+        else:
+            TEXT.build_vocab(train, specials_first=True)
 
-        return data.BucketIterator.splits((train, val, test), batch_size=batch_size,
-                                          repeat=repeat, device=device)
+        vocab = TEXT.vocab
+
+        return (data.BucketIterator.splits((train, val, test), batch_size=batch_size,
+                                           repeat=repeat, device=device),
+                (vocab, train))

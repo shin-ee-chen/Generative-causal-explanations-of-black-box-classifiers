@@ -1,0 +1,8 @@
+# Sweep over z_0
+-3.00: It a the but . the but . but . but . the the the the . . . . . . . . . . . . . .
+-2.00: It a the but . the but . but . but . the the the the . . . . . . . . . . . . . .
+-1.00: It a the but . the but . but . but . the the the the . . . . . . . . . . . . . .
++0.00: It a the but . the but . but . but . the the the the . . . . . . . . . . . . . .
++1.00: It a the but . the but . but . but . the the the the . . . . . . . . . . . . . .
++2.00: It a the but . the but . but . but . the the the the . . . . . . . . . . . . . .
++3.00: It a the but . the but . but . but . the the the the . . . . . . . . . . . . . .
