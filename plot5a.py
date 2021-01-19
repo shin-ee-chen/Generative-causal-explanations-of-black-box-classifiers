@@ -27,16 +27,6 @@ def train(args):
 
     M = len(args.classes)
 
-    train_set, valid_set = MNIST_limited(train=True, classes=args.classes)
-    test_set = MNIST_limited(train=False, classes=args.classes)
-
-    train_loader = data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True,
-                                   drop_last=True, pin_memory=True, num_workers=0)
-    valid_loader = data.DataLoader(valid_set, batch_size=args.batch_size, shuffle=False,
-                                   drop_last=True, pin_memory=True, num_workers=0)
-    test_loader = data.DataLoader(test_set, batch_size=args.batch_size, shuffle=False,
-                                  drop_last=True, pin_memory=True, num_workers=0)
-
     # load classifier
     classifier = MNIST_CNN(model_param_set=args.clf_param_set, M=M,
                         lr=args.lr, momentum=args.momentum)
@@ -70,23 +60,8 @@ def train(args):
     print("done 5a")
 
     # --- load test data ---
-    # train_set, valid_set = MNIST_limited(train=True, classes=args.classes)
-    # test_set = MNIST_limited(train=False, classes=args.classes)
-    #
-    # train_loader = data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True,
-    #                                drop_last=True, pin_memory=True, num_workers=0)
-    # valid_loader = data.DataLoader(valid_set, batch_size=args.batch_size, shuffle=False,
-    #                                drop_last=True, pin_memory=True, num_workers=0)
-    # test_loader = data.DataLoader(test_set, batch_size=args.batch_size, shuffle=False,
-    #                               drop_last=True, pin_memory=True, num_workers=0)
-    #
-    # data_classes = np.array([1,4,9])
-    # y_dim = data_classes.shape[0]
-    # ylabels = range(0,y_dim)
+    train_set, valid_set = MNIST_limited(train=True, classes=args.classes)
 
-    # dataloader_iterator = iter(valid_loader)
-    # vaX, vaY = next(dataloader_iterator)
-    # print(vaX.shape, vaY.shape, z.shape)
     valid_loader = data.DataLoader(valid_set, batch_size=1, shuffle=False,
                                    drop_last=True, pin_memory=True, num_workers=0)
     X = train_set.data
@@ -94,14 +69,6 @@ def train(args):
     vaX = valid_set.data
     vaY = valid_set.targets
 
-    # x1 = np.zeros((10, 10))
-    # x2 = X[None, :, :]
-
-
-    # print(vaX.shape)
-    # X, Y, tridx = load_mnist_classSelect('train', data_classes, ylabels)
-    # vaX, vaY, vaidx = load_mnist_classSelect('val', data_classes, ylabels)
-    # print(X.shape)
     ntrain, nrow, ncol = X.shape
     x_dim = nrow*ncol
 
@@ -110,20 +77,17 @@ def train(args):
     Yhat = np.zeros((len(vaX)))
     Yhat_reencoded = np.zeros((len(vaX)))
     Yhat_aspectremoved = np.zeros((z_dim, len(vaX)))
-    # print("hello", len(vaX))
+
     for i_samp in range(len(vaX)):
-        if (i_samp % 1000) == 0:
+        if (i_samp % 10) == 0:
             print(i_samp)
         dataloader_iterator = iter(valid_loader)
         vaX1, vaY1 = next(dataloader_iterator)
+        print("this is for debug please:", vaY1)
         x = torch.from_numpy(np.asarray(vaX1)).float()
         # x = torch.from_numpy(vaX[i_samp:i_samp+1,:,:,:]).permute(0,3,1,2).float().to(device)
         # print("test here: ", x.type())
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> 449b03c8dcbc108a5bf235c1f799a2c10eb0d508
         Yhat[i_samp] = np.argmax(F.softmax(classifier(x), dim=1).cpu().detach().numpy())
         z = gce.encoder(x.to(device))[0]
         xhat = gce.decoder(z)
