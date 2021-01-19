@@ -94,7 +94,7 @@ if __name__ == '__main__':
                         help='Learning rate to use')
     parser.add_argument('--batch_size', default=64, type=int,
                         help='Minibatch size')
-    parser.add_argument('--max_epochs', default=50, type=int,
+    parser.add_argument('--max_epochs', default=10, type=int,
                         help='Max number of training epochs')
 
     # Other hyperparameters

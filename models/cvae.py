@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 from models.mnist_cnn import MNIST_CNN
 from utils.reproducibility import load_latest
 from utils.vae_loss import sample_reparameterize, ELBO, ELBO_to_BPD
-from utils.information_flow import CVAE_to_params, joint_uncond
+from utils.information_flow import CVAE_to_params, joint_uncond, joint_uncond_singledim
 import numpy as np
 
 class CNN_Encoder(nn.Module):
@@ -145,7 +145,13 @@ class MNIST_CVAE(pl.LightningModule):
         self.lr = lr
         self.betas = tuple(betas)
 
-
+        self.ceparams = {
+            'Nalpha'           : Nalpha,
+            'Nbeta'            : Nbeta,
+            'K'                : K,
+            'L'                : L,
+            'M'                : M
+        }
 
         self.encoder = CNN_Encoder(img_channels=1, num_filters=num_filters, latent_dim=K + L)
         self.decoder = CNN_Decoder(img_channels=1, num_filters=num_filters, latent_dim=K + L)
@@ -193,26 +199,17 @@ class MNIST_CVAE(pl.LightningModule):
         Returns:
             C : the causal loss term, otherwise, mutual information: I(alpha; Y)
         """
-
         C, debug = joint_uncond(*CVAE_to_params(self))
 
         return C
 
     def information_flow_single(self, dims):
-        self.ceparams = {
-          'Nalpha'           : self.Nalpha,
-          'Nbeta'            : self.Nbeta,
-          'K'                : self.K,
-          'L'                : self.L,
-          'z_dim'            : self.K+self.L,
-          'M'                : self.M
-        }
-        ceparams = self.ceparams.copy()
         ndims = len(dims)
         Is = np.zeros(ndims)
         for (i, dim) in enumerate(dims):
-            negI, _ = joint_uncond(*CVAE_to_params(self))
-            Is[i] = negI
+            negI, _ = joint_uncond_singledim(*CVAE_to_params(self), dims)
+            # print("look here!", C, negI)
+            Is[i] = -1 * negI
         return Is
 
     def configure_optimizers(self):
