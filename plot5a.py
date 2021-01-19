@@ -110,7 +110,7 @@ def train(args):
     Yhat = np.zeros((len(vaX)))
     Yhat_reencoded = np.zeros((len(vaX)))
     Yhat_aspectremoved = np.zeros((z_dim, len(vaX)))
-    print("hello", len(vaX))
+    # print("hello", len(vaX))
     for i_samp in range(len(vaX)):
         if (i_samp % 10) == 0:
             print(i_samp)
@@ -118,7 +118,7 @@ def train(args):
         vaX1, vaY1 = next(dataloader_iterator)
         x = torch.from_numpy(np.asarray(vaX1)).float()
         # x = torch.from_numpy(vaX[i_samp:i_samp+1,:,:,:]).permute(0,3,1,2).float().to(device)
-        print("test here: ", x.type())
+        # print("test here: ", x.type())
         
         Yhat[i_samp] = np.argmax(F.softmax(classifier(x), dim=1).cpu().detach().numpy())
         z = gce.encoder(x.to(device))[0]
