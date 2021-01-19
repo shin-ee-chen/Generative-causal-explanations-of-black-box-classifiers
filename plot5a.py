@@ -56,7 +56,7 @@ def train(args):
     plt.ylabel('Information flow to $\\widehat{Y}$')
     plt.title('Information flow of individual causal factors')
     plt.savefig('./figures/fig5a.svg')
-    plt.savefig('./figures/fig5a.png')
+    plt.savefig('./figures/fig5a.pdf')
     print("done 5a")
 
     # --- load test data ---
@@ -131,7 +131,7 @@ def train(args):
     plt.ylabel('Classifier accuracy')
     plt.title('Classifier accuracy after removing aspect')
     plt.savefig('./figures/fig5b.svg')
-    plt.savefig('./figures/fig5b.png')
+    plt.savefig('./figures/fig5b.pdf')
 
 
 
@@ -147,16 +147,6 @@ if __name__ == '__main__':
     parser.add_argument('--classes', default=[1, 4, 9],
                         type=int, nargs='+',
                         help='The classes permittible for classification')
-
-    # Loss and optimizer hyperparameters
-    parser.add_argument('--lr', default=5e-4, type=float,
-                        help='Learning rate to use')
-    parser.add_argument('--momentum', default=0.9, type=float,
-                        help='Learning rate to use')
-    parser.add_argument('--batch_size', default=64, type=int,
-                        help='Minibatch size')
-    parser.add_argument('--max_epochs', default=50, type=int,
-                        help='Max number of training epochs')
 
     # Other hyperparameters
 
