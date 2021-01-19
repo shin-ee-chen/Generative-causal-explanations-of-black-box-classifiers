@@ -51,8 +51,8 @@ def train(args):
 
     # plot information_flow
     z_dim = args.K + args.L
-    info_flow = -gce.information_flow_single(range(0,z_dim))
-
+    info_flow = gce.information_flow_single(range(0,z_dim))
+    print("hi there!", info_flow)
     cols = {'golden_poppy' : [1.000,0.761,0.039],
         'bright_navy_blue' : [0.047,0.482,0.863],
         'rosso_corsa' : [0.816,0.000,0.000]}
