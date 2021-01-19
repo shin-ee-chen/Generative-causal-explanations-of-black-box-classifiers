@@ -119,7 +119,11 @@ def train(args):
         x = torch.from_numpy(np.asarray(vaX1)).float()
         # x = torch.from_numpy(vaX[i_samp:i_samp+1,:,:,:]).permute(0,3,1,2).float().to(device)
         # print("test here: ", x.type())
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 449b03c8dcbc108a5bf235c1f799a2c10eb0d508
         Yhat[i_samp] = np.argmax(F.softmax(classifier(x), dim=1).cpu().detach().numpy())
         z = gce.encoder(x.to(device))[0]
         xhat = gce.decoder(z)
