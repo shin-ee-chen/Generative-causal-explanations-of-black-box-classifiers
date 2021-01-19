@@ -66,6 +66,7 @@ def train(args):
     model = MNIST_CNN.load_from_checkpoint(
         trainer.checkpoint_callback.best_model_path)
 
+
     # Test results
     val_result = trainer.test(
         model, test_dataloaders=valid_loader, verbose=False)

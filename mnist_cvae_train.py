@@ -171,8 +171,18 @@ def train(args):
     
     test_result = trainer.test(
         model, test_dataloaders=test_loader, verbose=True)
+    
+    gce_path = './pretrained_models/'+ args.log_dir
+    if not os.path.exists(gce_path):
+        os.mkdir(gce_path)
 
+    torch.save(cvae_model, os.path.join(gce_path,'cvae_model.pt'))
+    
     return test_result, trainer
+
+
+
+
 
 if __name__ == '__main__':
     # Feel free to add more argument parameters
