@@ -66,7 +66,8 @@ def CVAE_sweep(model, i=0, rows=8, dataset=None, save_loc=None):
         for z_val in sweep_range:
 
             z[:, i] += z_val
-            recon_img = torch.round(torch.sigmoid(model.decoder(z)))
+            # recon_img = torch.round(torch.sigmoid(model.decoder(z)))
+            recon_img = torch.sigmoid(model.decoder(z))
             recon_img.detach_()
             
             z_sweep.append(recon_img)
@@ -84,7 +85,7 @@ def CVAE_sweep(model, i=0, rows=8, dataset=None, save_loc=None):
 
             t = torch.argmax(model.classifier(img[None, :])).item()
 
-            ax.imshow(img.permute(1, 2, 0).cpu().numpy(), cmap='binary',
+            ax.imshow(img.permute(1, 2, 0).cpu().numpy(), cmap='gray',
                       vmin=0, vmax=1)
 
             ax.tick_params(axis='both', which='both',
