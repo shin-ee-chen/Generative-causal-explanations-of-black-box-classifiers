@@ -75,7 +75,6 @@ def joint_uncond_singledim(params, decoder, classifier, device, dim):
         I = I + 1./float(params['Nalpha']) * torch.sum(torch.mul(p, torch.log(p+eps)))
         q = q + 1./float(params['Nalpha']) * p # accumulate estimate of p(y)
         # print("look here for debug2", I)
-        break
     I = I - torch.sum(torch.mul(q, torch.log(q+eps)))
     negCausalEffect = -I
     info = {"xhat" : xhat, "yhat" : yhat}
