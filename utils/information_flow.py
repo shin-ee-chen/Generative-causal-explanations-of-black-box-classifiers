@@ -52,17 +52,12 @@ def joint_uncond(params, decoder, classifier, device):
 
     negCausalEffect = -I
     info = {"xhat": xhat, "yhat": yhat}
-<<<<<<< HEAD
 
     return negCausalEffect, info
+
 
 def joint_uncond_singledim(params, decoder, classifier, device, dims):
-=======
-    
-    return negCausalEffect, info
 
-def joint_uncond_singledim(params, decoder, classifier, device, dim):
->>>>>>> 449b03c8dcbc108a5bf235c1f799a2c10eb0d508
     eps = 1e-8
     I = 0.0
 
@@ -70,17 +65,12 @@ def joint_uncond_singledim(params, decoder, classifier, device, dim):
     zs = np.zeros((params['Nalpha']*params['Nbeta'], params['z_dim']))
     for i in range(0, params['Nalpha']):
         z_fix = np.random.randn(1)
-<<<<<<< HEAD
+
         zs = np.zeros((params['Nbeta'],params['z_dim']))
         for j in range(0, params['Nbeta']):
             zs[j,:] = np.random.randn(params['K']+params['L'])
             zs[j,dims] = z_fix
-=======
-        zs = np.zeros((params['Nbeta'],params['z_dim']))  
-        for j in range(0, params['Nbeta']):
-            zs[j,:] = np.random.randn(params['K']+params['L'])
-            zs[j,dim] = z_fix
->>>>>>> 449b03c8dcbc108a5bf235c1f799a2c10eb0d508
+
         # decode and classify batch of Nbeta samples with same alpha
         xhat = decoder(torch.from_numpy(zs).float().to(device))
         xhat = torch.sigmoid(xhat)
@@ -93,8 +83,5 @@ def joint_uncond_singledim(params, decoder, classifier, device, dim):
     I = I - torch.sum(torch.mul(q, torch.log(q+eps)))
     negCausalEffect = -I
     info = {"xhat" : xhat, "yhat" : yhat}
-<<<<<<< HEAD
+
     return negCausalEffect, info
-=======
-    return negCausalEffect, info
->>>>>>> 449b03c8dcbc108a5bf235c1f799a2c10eb0d508

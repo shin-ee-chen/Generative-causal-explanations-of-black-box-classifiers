@@ -24,7 +24,7 @@ def train(args):
     Inputs:
         args - Namespace object from the argparser
     """
-
+    print("hi let us start!")
     M = len(args.classes)
 
     # load classifier
@@ -56,7 +56,7 @@ def train(args):
     plt.ylabel('Information flow to $\\widehat{Y}$')
     plt.title('Information flow of individual causal factors')
     plt.savefig('./figures/fig5a.svg')
-    plt.savefig('./figures/fig5a.pdf')
+    plt.savefig('./figures/fig5a.png')
     print("done 5a")
 
     # --- load test data ---
@@ -68,6 +68,7 @@ def train(args):
     Y = train_set.targets
     vaX = valid_set.data
     vaY = valid_set.targets
+    # print("this is for debug1:", vaX[None, 0:1,:,:].shape)
 
     ntrain, nrow, ncol = X.shape
     x_dim = nrow*ncol
@@ -83,12 +84,12 @@ def train(args):
             print(i_samp)
         dataloader_iterator = iter(valid_loader)
         vaX1, vaY1 = next(dataloader_iterator)
-        print("this is for debug please:", vaY1)
-        x = torch.from_numpy(np.asarray(vaX1)).float()
-        # x = torch.from_numpy(vaX[i_samp:i_samp+1,:,:,:]).permute(0,3,1,2).float().to(device)
+        # print("this is for debug please:", vaY1)
+        # x = torch.from_numpy(np.asarray(vaX1)).float()
+        x = torch.from_numpy(np.asarray(vaX[None, i_samp:i_samp+1,:,:])).float().to(device)
         # print("test here: ", x.type())
 
-        Yhat[i_samp] = np.argmax(F.softmax(classifier(x), dim=1).cpu().detach().numpy())
+        Yhat[i_samp] = np.argmax(F.softmax(classifier(x.cpu()), dim=1).cpu().detach().numpy())
         z = gce.encoder(x.to(device))[0]
         xhat = gce.decoder(z)
         xhat = torch.sigmoid(xhat)
@@ -130,7 +131,7 @@ def train(args):
     plt.ylabel('Classifier accuracy')
     plt.title('Classifier accuracy after removing aspect')
     plt.savefig('./figures/fig5b.svg')
-    plt.savefig('./figures/fig5b.pdf')
+    plt.savefig('./figures/fig5b.png')
 
 
 
