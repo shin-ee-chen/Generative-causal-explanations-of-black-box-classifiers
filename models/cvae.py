@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 from models.mnist_cnn import MNIST_CNN
 from utils.reproducibility import load_latest
 from utils.vae_loss import sample_reparameterize, ELBO, ELBO_to_BPD
-from utils.information_flow import CVAE_to_params, joint_uncond
+from utils.information_flow import CVAE_to_params, joint_uncond, joint_uncond_singledim
 import numpy as np
 
 class CNN_Encoder(nn.Module):
@@ -211,7 +211,7 @@ class MNIST_CVAE(pl.LightningModule):
         ndims = len(dims)
         Is = np.zeros(ndims)
         for (i, dim) in enumerate(dims):
-            negI, _ = joint_uncond(*CVAE_to_params(self))
+            negI, _ = joint_uncond_singledim(*CVAE_to_params(self), dims)
             Is[i] = negI
         return Is
 
