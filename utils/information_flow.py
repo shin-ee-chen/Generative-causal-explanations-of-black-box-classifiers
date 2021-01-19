@@ -69,6 +69,7 @@ def joint_uncond_singledim(params, decoder, classifier, device, dim):
             zs[j,dim] = z_fix
         # decode and classify batch of Nbeta samples with same alpha
         xhat = decoder(torch.from_numpy(zs).float().to(device))
+        xhat = torch.sigmoid(xhat)
         yhat = F.softmax(classifier(xhat), dim=1)
         p = 1./float(params['Nbeta']) * torch.sum(yhat,0) # estimate of p(y|alpha)
         # print("look here for debug1", float(params['Nbeta']), "end")

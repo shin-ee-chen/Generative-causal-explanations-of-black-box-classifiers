@@ -17,7 +17,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 import matplotlib.pyplot as plt
 
 import numpy as np
-
+import torch.nn.functional as F
 
 def train(args):
     """
@@ -119,15 +119,18 @@ def train(args):
         x = torch.from_numpy(np.asarray(vaX1)).float()
         # x = torch.from_numpy(vaX[i_samp:i_samp+1,:,:,:]).permute(0,3,1,2).float().to(device)
         print("test here: ", x.type())
-        Yhat[i_samp] = np.argmax(classifier(x)[0].cpu().detach().numpy())
+        
+        Yhat[i_samp] = np.argmax(F.softmax(classifier(x), dim=1).cpu().detach().numpy())
         z = gce.encoder(x.to(device))[0]
         xhat = gce.decoder(z)
-        Yhat_reencoded[i_samp] = np.argmax(classifier(xhat.cpu())[0].cpu().detach().numpy())
+        xhat = torch.sigmoid(xhat)
+        Yhat_reencoded[i_samp] = np.argmax(F.softmax(classifier(xhat.cpu()), dim=1).cpu().detach().numpy())
         for i_latent in range(z_dim):
             z = gce.encoder(x.to(device))[0]
             z[0,i_latent] = torch.randn((1))
             xhat = gce.decoder(z)
-            Yhat_aspectremoved[i_latent,i_samp] = np.argmax(classifier(xhat.cpu())[0].cpu().detach().numpy())
+            xhat = torch.sigmoid(xhat)
+            Yhat_aspectremoved[i_latent,i_samp] = np.argmax(F.softmax(classifier(xhat.cpu()), dim=1).cpu().detach().numpy())
     vaY = np.asarray(vaY)
     Yhat = np.asarray(Yhat)
     Yhat_reencoded = np.asarray(Yhat_reencoded)
