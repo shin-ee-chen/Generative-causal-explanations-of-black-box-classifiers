@@ -53,7 +53,7 @@ class GenerateCallback(pl.Callback):
             trainer.current_epoch == 0 or
                 (trainer.current_epoch + 1) == trainer.max_epochs):
             #self.sample_and_save(trainer, pl_module, trainer.current_epoch+1)
-            self.sweep_and_save(trainer, pl_module, save_loc=trainer.logger._version+'_'+trainer.current_epoch)
+            self.sweep_and_save(trainer, pl_module, save_loc=f"{trainer.logger._version}+_+{trainer.current_epoch}")
             
         torch.cuda.empty_cache()
 
