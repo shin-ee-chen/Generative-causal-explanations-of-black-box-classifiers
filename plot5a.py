@@ -17,142 +17,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 import matplotlib.pyplot as plt
 
 import numpy as np
-def load_mnist_idx(data_type):
-       data_dir = 'datasets/mnist2/'
-       fd = open(os.path.join(data_dir,'train-images.idx3-ubyte'))
-       loaded = np.fromfile(file=fd,dtype=np.uint8)
-       trX = loaded[16:].reshape((60000,28,28,1)).astype(np.float)
-       fd = open(os.path.join(data_dir,'train-labels.idx1-ubyte'))
-       loaded = np.fromfile(file=fd,dtype=np.uint8)
-       trY = loaded[8:].reshape((60000)).astype(np.float)
-       fd = open(os.path.join(data_dir,'t10k-images.idx3-ubyte'))
-       loaded = np.fromfile(file=fd,dtype=np.uint8)
-       teX = loaded[16:].reshape((10000,28,28,1)).astype(np.float)
-       fd = open(os.path.join(data_dir,'t10k-labels.idx1-ubyte'))
-       loaded = np.fromfile(file=fd,dtype=np.uint8)
-       teY = loaded[8:].reshape((10000)).astype(np.float)
-       trY = np.asarray(trY)
-       teY = np.asarray(teY)
-       if data_type == "train":
-           X = trX[0:50000,:,:,:]
-           y = trY[0:50000].astype(np.int)
-       elif data_type == "test":
-           X = teX
-           y = teY.astype(np.int)
-       elif data_type == "val":
-           X = trX[50000:60000,:,:,:]
-           y = trY[50000:60000].astype(np.int)
-       idxUse = np.arange(0,y.shape[0])
-       seed = 547
-       np.random.seed(seed)
-       np.random.shuffle(X)
-       np.random.seed(seed)
-       np.random.shuffle(y)
-       np.random.seed(seed)
-       np.random.shuffle(idxUse)
 
-       return X/255.,y,idxUse
-
-def load_mnist_classSelect(data_type,class_use,newClass):
-
-    X, Y, idx = load_mnist_idx(data_type)
-    class_idx_total = np.zeros((0,0))
-    Y_use = Y
-
-    count_y = 0
-    for k in class_use:
-        class_idx = np.where(Y[:]==k)[0]
-        Y_use[class_idx] = newClass[count_y]
-        class_idx_total = np.append(class_idx_total,class_idx)
-        count_y = count_y +1
-
-    class_idx_total = np.sort(class_idx_total).astype(int)
-
-    X = X[class_idx_total,:,:,:]
-    Y = Y_use[class_idx_total]
-    return X,Y,idx
-
-# class GenerateCallback(pl.Callback):
-#
-#     def __init__(self, batch_size, every_n_epochs, save_to_disk, valid_data=None):
-#         """
-#         Inputs:
-#             batch_size - Number of images to generate
-#             every_n_epochs - Only save those images every N epochs (otherwise tensorboard gets quite large)
-#             save_to_disk - If True, the samples and image means should be saved to disk as well.
-#         """
-#         super().__init__()
-#         self.batch_size = batch_size
-#         self.every_n_epochs = every_n_epochs
-#         self.save_to_disk = save_to_disk
-#
-#         self.valid_data = valid_data
-#
-#     def on_fit_end(self, trainer, pl_module):
-#         """
-#         This function is called after finishing training.
-#         """
-#         if self.every_n_epochs == -1:
-#             self.sweep_and_save(trainer, pl_module, save_loc=trainer.logger._version)
-#
-#     def on_epoch_end(self, trainer, pl_module):
-#         """
-#         This function is called after every epoch.
-#         """
-#         if self.every_n_epochs == -1:
-#             pass
-#
-#         elif ((trainer.current_epoch + 1) % self.every_n_epochs == 0 or
-#             trainer.current_epoch == 0 or
-#                 (trainer.current_epoch + 1) == trainer.max_epochs):
-#             #self.sample_and_save(trainer, pl_module, trainer.current_epoch+1)
-#             self.sweep_and_save(trainer, pl_module, save_loc=trainer.logger._version+'_'+trainer.current_epoch)
-#
-#         torch.cuda.empty_cache()
-#
-#     def sample_and_save(self, trainer, pl_module, epoch):
-#         """
-#         Function that generates and save samples from the VAE.
-#         The generated samples and mean images should be added to TensorBoard and,
-#         if self.save_to_disk is True, saved inside the logging directory.
-#         Inputs:
-#             trainer - The PyTorch Lightning "Trainer" object.
-#             pl_module - The VAE model that is currently being trained.
-#             epoch - The epoch number to use for TensorBoard logging and saving of the files.
-#         """
-#
-#         imgs, _ = pl_module.sample(64)
-#
-#         if self.save_to_disk:
-#             save_image(imgs, trainer.logger.log_dir + '/epoch{:d}.png'.format(epoch),
-#                        nrow=8)
-#
-#         img_grid = make_grid(imgs, nrow=8)
-#         img_grid = img_grid.mul(255).add_(
-#             0.5).clamp_(0, 255)  # .permute(1, 2, 0)
-#         img_grid = img_grid.type(torch.ByteTensor).numpy()
-#
-#         trainer.logger.experiment.add_image('Generated Digits',
-#                                             img_grid, epoch)
-#
-#         return img_grid
-#
-#     def sweep_and_save(self, trainer, pl_module, save_loc):
-#         """
-#         Function that sweeps over all latent variables and saves samples from the VAE.
-#         The generated samples and mean images should be added to TensorBoard and,
-#         if self.save_to_disk is True, saved inside the logging directory.
-#         Inputs:
-#             trainer - The PyTorch Lightning "Trainer" object.
-#             pl_module - The VAE model that is currently being trained.
-#         """
-#
-#         img_grid = []
-#         for i in range(pl_module.K + pl_module.L):
-#             img_grid.append(
-#                 CVAE_sweep(pl_module, i=i, rows=self.batch_size,
-#                            dataset=self.valid_data, save_loc=save_loc)
-#             )
 
 def train(args):
     """
@@ -224,10 +89,10 @@ def train(args):
     # print(vaX.shape, vaY.shape, z.shape)
     valid_loader = data.DataLoader(valid_set, batch_size=1, shuffle=False,
                                    drop_last=True, pin_memory=True, num_workers=0)
-    X = train_set.data[0:100,:,:]
-    Y = train_set.targets[0:100]
-    vaX = valid_set.data[0:100,:,:]
-    vaY = valid_set.targets[0:100]
+    X = train_set.data
+    Y = train_set.targets
+    vaX = valid_set.data
+    vaY = valid_set.targets
 
     # x1 = np.zeros((10, 10))
     # x2 = X[None, :, :]
