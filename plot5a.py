@@ -32,16 +32,21 @@ def train(args):
                         lr=args.lr, momentum=args.momentum)
 
     classifier_path = './pretrained_models/mnist_cnn/'
-    checkpoint_model = torch.load(os.path.join(classifier_path,'model.pt'), map_location=device)
+    checkpoint_model = torch.load(os.path.join(classifier_path,'model_pre.pt'), map_location=device)
     classifier.load_state_dict(checkpoint_model['model_state_dict_classifier'])
 
     # load GCE
     gce_path = './pretrained_models/mnist_cvae/'
-    gce = torch.load(os.path.join(gce_path,'model.pt'), map_location=device)
+    gce = torch.load(os.path.join(gce_path,'model_pre.pt'), map_location=device)
 
     # plot information_flow
     z_dim = args.K + args.L
     info_flow = gce.information_flow_single(range(0,z_dim))
+
+
+
+
+
     print("hi there!", info_flow)
     cols = {'golden_poppy' : [1.000,0.761,0.039],
         'bright_navy_blue' : [0.047,0.482,0.863],
@@ -56,7 +61,7 @@ def train(args):
     plt.ylabel('Information flow to $\\widehat{Y}$')
     plt.title('Information flow of individual causal factors')
     plt.savefig('./figures/fig5a.svg')
-    plt.savefig('./figures/fig5a.pdf')
+    plt.savefig('./figures/fig5a.png')
     print("done 5a")
 
     # --- load test data ---
@@ -80,7 +85,7 @@ def train(args):
     Yhat_aspectremoved = np.zeros((z_dim, len(vaX)))
 
     for i_samp in range(len(vaX)):
-        if (i_samp % 10) == 0:
+        if (i_samp % 1000) == 0:
             print(i_samp)
         dataloader_iterator = iter(valid_loader)
         vaX1, vaY1 = next(dataloader_iterator)
@@ -131,7 +136,7 @@ def train(args):
     plt.ylabel('Classifier accuracy')
     plt.title('Classifier accuracy after removing aspect')
     plt.savefig('./figures/fig5b.svg')
-    plt.savefig('./figures/fig5b.pdf')
+    plt.savefig('./figures/fig5b.png')
 
 
 
@@ -147,6 +152,15 @@ if __name__ == '__main__':
     parser.add_argument('--classes', default=[1, 4, 9],
                         type=int, nargs='+',
                         help='The classes permittible for classification')
+    # Loss and optimizer hyperparameters
+    parser.add_argument('--lr', default=5e-4, type=float,
+                        help='Learning rate to use')
+    parser.add_argument('--momentum', default=0.9, type=float,
+                        help='Learning rate to use')
+    parser.add_argument('--batch_size', default=64, type=int,
+                        help='Minibatch size')
+    parser.add_argument('--max_epochs', default=50, type=int,
+                        help='Max number of training epochs')
 
     # Other hyperparameters
 

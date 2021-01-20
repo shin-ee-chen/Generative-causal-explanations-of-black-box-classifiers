@@ -207,7 +207,7 @@ class MNIST_CVAE(pl.LightningModule):
         ndims = len(dims)
         Is = np.zeros(ndims)
         for (i, dim) in enumerate(dims):
-            negI, _ = joint_uncond_singledim(*CVAE_to_params(self), dims)
+            negI, _ = joint_uncond_singledim(*CVAE_to_params(self), dim)
             # print("look here!", C, negI)
             Is[i] = -1 * negI
         return Is

@@ -58,7 +58,7 @@ def joint_uncond(params, decoder, classifier, device):
 
 def joint_uncond_singledim(params, decoder, classifier, device, dims):
 
-    eps = 1e-8
+    eps = 1e-5
     I = 0.0
 
     q = torch.zeros(params['M']).to(device)
@@ -75,6 +75,10 @@ def joint_uncond_singledim(params, decoder, classifier, device, dims):
         xhat = decoder(torch.from_numpy(zs).float().to(device))
         xhat = torch.sigmoid(xhat)
         yhat = F.softmax(classifier(xhat), dim=1)
+        # yhat = classifier(xhat)[0]
+        # yhat = yhat.cpu().detach().numpy().max()
+        # print("here is my yhat!", yhat)
+
         p = 1./float(params['Nbeta']) * torch.sum(yhat,0) # estimate of p(y|alpha)
         # print("look here for debug1", float(params['Nbeta']), "end")
         I = I + 1./float(params['Nalpha']) * torch.sum(torch.mul(p, torch.log(p+eps)))
