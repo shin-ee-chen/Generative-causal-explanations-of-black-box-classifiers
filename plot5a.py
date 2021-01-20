@@ -129,7 +129,7 @@ def train(args):
                                            [classifier_accuracy_reencoded],
                                            classifier_accuracy_aspectremoved)),
            color=[cols['black'], cols['black'], cols['rosso_corsa'],
-                  cols['rosso_corsa'], cols['bright_navy_blue']])
+                  cols['rosso_corsa'], cols['bright_navy_blue'], cols['bright_navy_blue']])
     plt.xticks(range(z_dim+2), x_labels)
     plt.ylim((0.2,1.0))
     plt.yticks((0.2,0.4,0.6))#,('0.5','','0.75','','1.0'))
