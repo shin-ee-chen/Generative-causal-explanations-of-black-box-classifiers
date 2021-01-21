@@ -53,6 +53,12 @@ Ivo Verhoeven
 # Requirements
 
 # How to start
+### For getting Figure 5(ab) in the original pape, please run the following command
+```
+python plot5ab.py
+```
+The produced figures would be in the directory figures/Figure5ab.
+
 
 # Results
 For images visualising CVAE's latent space, see the figures directory. Images generated during training are stored as, Model>Epoch>Variable.
