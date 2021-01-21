@@ -37,8 +37,8 @@ def train(args):
         gce_path = './pretrained_models/mnist_cvae38/'
         
     if args.classes == [0, 3, 4]:
-        classifier_path = './pretrained_models/mnist_cnn034/'
-        gce_path = './pretrained_models/mnist_cvae034/'
+        classifier_path = './pretrained_models/fmnist_cnn034/'
+        gce_path = './pretrained_models/fmnist_cvae034/'
 
 
     # load classifier

@@ -76,7 +76,7 @@ def train(args):
         classifier_path = './pretrained_models/mnist_cnn38/'
         
     if args.classes == [0, 3, 4]:
-        classifier_path = './pretrained_models/mnist_cnn034/'
+        classifier_path = './pretrained_models/fmnist_cnn034/'
 
     torch.save({
     'model_state_dict_classifier': model.state_dict()

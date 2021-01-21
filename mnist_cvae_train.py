@@ -170,7 +170,7 @@ def train(args):
         gce_path = './pretrained_models/mnist_cvae38/'
 
     if args.classes == [0, 3, 4]:
-        gce_path = './pretrained_models/mnist_cvae034/'
+        gce_path = './pretrained_models/fmnist_cvae034/'
 
     # gce_path = './pretrained_models/'+ args.log_dir + '/'
 
