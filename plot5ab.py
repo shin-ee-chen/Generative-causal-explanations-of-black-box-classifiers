@@ -27,16 +27,30 @@ def train(args):
     print("hi let us start!")
     M = len(args.classes)
 
+
+    if args.classes == [1, 4, 9]:
+        classifier_path = './pretrained_models/mnist_cnn149/'
+        gce_path = './pretrained_models/mnist_cvae149/'
+
+    if args.classes == [3, 8]:
+        classifier_path = './pretrained_models/mnist_cnn38/'
+        gce_path = './pretrained_models/mnist_cvae38/'
+        
+    if args.classes == [0, 3, 4]:
+        classifier_path = './pretrained_models/mnist_cnn034/'
+        gce_path = './pretrained_models/mnist_cvae034/'
+
+
     # load classifier
     classifier = MNIST_CNN(model_param_set=args.clf_param_set, M=M,
                         lr=args.lr, momentum=args.momentum)
 
-    classifier_path = './pretrained_models/mnist_cnn/'
+    # classifier_path = './pretrained_models/mnist_cnn/'
     checkpoint_model = torch.load(os.path.join(classifier_path,'model.pt'), map_location=device)
     classifier.load_state_dict(checkpoint_model['model_state_dict_classifier'])
 
     # load GCE
-    gce_path = './pretrained_models/mnist_cvae/'
+    # gce_path = './pretrained_models/mnist_cvae/'
     gce = torch.load(os.path.join(gce_path,'model.pt'), map_location=device)
 
     # plot information_flow

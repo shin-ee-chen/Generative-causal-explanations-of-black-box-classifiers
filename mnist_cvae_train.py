@@ -163,7 +163,16 @@ def train(args):
     test_result = trainer.test(
         model, test_dataloaders=test_loader, verbose=True)
 
-    gce_path = './pretrained_models/'+ args.log_dir + '/'
+    if args.classes == [1, 4, 9]:
+        gce_path = './pretrained_models/mnist_cvae149/'
+
+    if args.classes == [3, 8]:
+        gce_path = './pretrained_models/mnist_cvae38/'
+
+    if args.classes == [0, 3, 4]:
+        gce_path = './pretrained_models/mnist_cvae034/'
+
+    # gce_path = './pretrained_models/'+ args.log_dir + '/'
 
     torch.save(model, os.path.join(gce_path,'model.pt'))
 
