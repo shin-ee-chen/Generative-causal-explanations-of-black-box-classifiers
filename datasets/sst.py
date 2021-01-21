@@ -6,6 +6,7 @@ this seems most elegant.
 '''
 
 import os
+import re
 
 import torch
 import torchtext
@@ -59,7 +60,7 @@ class SST(data.Dataset):
             else:
                 examples = [data.Example.fromtree(line, fields) for line in f]
 
-        if fine_grained:
+        if (not fine_grained):
             filter_pred = lambda ex: ex.label in ['negative', 'positive']
         else:
             filter_pred = None
@@ -103,7 +104,7 @@ class SST(data.Dataset):
                      if d is not None)
 
     @ classmethod
-    def iters(cls, batch_size=32, device=None, root='./datasets', repeat=True, vectors=None, **kwargs):
+    def iters(cls, batch_size=32, device=None, root='./datasets', repeat=True, vectors=None, pad_to_max=True, **kwargs):
         """Create iterator objects for splits of the SST dataset.
 
             Arguments:
@@ -120,9 +121,10 @@ class SST(data.Dataset):
 
         LABEL = Field(sequential=False, batch_first=False, is_target=True)
         TEXT = Field(use_vocab=True, lower=True, include_lengths=False,
-                     batch_first=False, fix_length=MAX_SEQ_LEN,
+                     batch_first=False,
                      pad_token=PAD_TOKEN, unk_token=UNK_TOKEN,
-                     init_token=INIT_TOKEN, eos_token=EOS_TOKEN)
+                     init_token=INIT_TOKEN, eos_token=EOS_TOKEN,
+                     fix_length=MAX_SEQ_LEN if pad_to_max else None)
 
         train, val, test = cls.splits(TEXT, LABEL, root=root, **kwargs)
 
@@ -137,3 +139,9 @@ class SST(data.Dataset):
         return (data.BucketIterator.splits((train, val, test), batch_size=batch_size,
                                            repeat=repeat, device=device),
                 (vocab, train))
+
+def get_glove_url(type='reduced'):
+    if type == 'reduced':
+        url = 'https://gist.githubusercontent.com/bastings/b094de2813da58056a05e8e7950d4ad1/raw/3fbd3976199c2b88de2ae62afc0ecc6f15e6f7ce/glove.840B.300d.sst.txt'
+
+    return url

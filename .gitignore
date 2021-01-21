@@ -60,4 +60,4 @@ scratchpad*.ipynb
 .vscode
 debug/
 /datasets/**
-checkpoints/text_vae/lightning_logs/version_5/checkpoints/epoch=2.ckpt
+text_vae*/

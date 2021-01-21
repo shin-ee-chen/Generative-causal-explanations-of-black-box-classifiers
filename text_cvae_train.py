@@ -6,15 +6,15 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data as data
+import torchtext
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
-from models.lm_cvae import lm_VAE
-from datasets.sst import SST
+from models.lm_cvae import text_VAE
+from datasets.sst import SST, get_glove_url
 from utils.reproducibility import set_seed, set_deterministic, load_latest
 
 CHECKPOINT_PATH = './checkpoints'
-
 class GenerateCallback(pl.Callback):
 
     def __init__(self, save_loc, every_n_epochs, data_loader):
@@ -46,7 +46,7 @@ class GenerateCallback(pl.Callback):
                         exist_ok=True)
 
             self.sample_and_save(trainer, pl_module, trainer.current_epoch)
-            self.sweep_and_save(trainer, pl_module, trainer.current_epoch)
+            #self.sweep_and_save(trainer, pl_module, trainer.current_epoch)
 
     def sample_and_save(self, trainer, pl_module, epoch):
         """
@@ -65,7 +65,7 @@ class GenerateCallback(pl.Callback):
             self.data_loader = iter(self.data_loader)
             batch = next(self.data_loader)
 
-        text_sample = pl_module.decode(batch.text)
+        text_sample = pl_module.reconstruct(batch.text)
         path = os.path.join(self.save_loc,
                             'samples.txt')
         np.savetxt(path, text_sample,
@@ -103,18 +103,18 @@ def train(args):
         args - Namespace object from the argument parser
     """
 
-    #assert len(args.classes) == args.M
-
-    #if args.add_classes_to_cpt_path == True:
-    #    classes_str = ''.join(str(x) for x in sorted(args.classes))
-    #    full_log_dir = os.path.join(CHECKPOINT_PATH, args.log_dir + '_' + classes_str)
-    #else:
-    full_log_dir = os.path.join(CHECKPOINT_PATH, args.log_dir)
+    if args.version == '':
+        full_log_dir = os.path.join(CHECKPOINT_PATH, args.log_dir)
+    else:
+        full_log_dir = os.path.join(CHECKPOINT_PATH, args.log_dir + '_' + args.version)
+    print('Saving to:', full_log_dir)
     os.makedirs(full_log_dir, exist_ok = True)
 
     # Handling the training
     device = torch.device('cuda' if (torch.cuda.is_available() and args.gpu) else 'cpu')
-    data_loaders, info = SST.iters(batch_size=args.batch_size, repeat=True, device=device)
+
+    data_loaders, info = SST.iters(batch_size=args.batch_size, repeat=True,
+                                   fine_grained=False, device=device)
     (train_loader, valid_loader, test_loader) = data_loaders
     (vocab, train_data) = info
 
@@ -122,44 +122,51 @@ def train(args):
                                     data_loader=valid_loader,
                                     save_loc=full_log_dir)
 
-    lr_monitor = LearningRateMonitor(logging_interval='epoch')
+    checkpoint_callback = ModelCheckpoint(monitor='Valid ELBO',
+                                          filename='text_vae-epoch{epoch:02d}-val_elbo{Valid ELBO:.2f}-val_kld{Valid L_reg:.2f}--val_mi{Valid MI:.2f}',
+                                          mode='min',
+                                          verbose=True,
+                                          save_last=True)
 
     trainer = pl.Trainer(default_root_dir=full_log_dir,
-                         checkpoint_callback=ModelCheckpoint(
-                             save_weights_only=True, mode="min", monitor="Valid BPD"),
                          gpus=1 if (torch.cuda.is_available() and args.gpu) else 0,
                          max_epochs=args.max_epochs,
-                         callbacks=[gen_callback, lr_monitor],
+                         callbacks=[checkpoint_callback, gen_callback],
                          progress_bar_refresh_rate=1 if args.progress_bar else 0,
                          fast_dev_run=args.debug,
-                         gradient_clip_val=5,
-                         automatic_optimization=False
-                         )
+                         gradient_clip_val=5
+                        )
 
     trainer.logger._default_hp_metric = None
 
-    set_seed(42)
-    set_deterministic()
-
     if args.debug:
         trainer.logger._version = 'debug'  # str(args.model) + '_' + str(args.z_dim) + '_' + str(args.seed)
+    elif args.version != '':
+        trainer.logger._version = args.version
 
-    anneal_rate = (1.0 - args.kl_start) / (args.warm_up * (len(train_data) / args.batch_size))
-    model = lm_VAE(vocab=vocab,
-                   embedding_dims=512,
-                   hidden_dims=1024,
-                   latent_dims=32,
-                   z_iters=50,
-                   aggressive=True,
-                   inner_iter=30,
-                   kl_weight_start=args.kl_start,
-                   anneal_rate=anneal_rate,
-                   decoding_strategy='beam_search')
+    set_seed(42)
+    #set_deterministic()
+
+    anneal_rate = (1.0 - args.kl_weight_start) / (args.warm_up * (len(train_data) / args.batch_size))
+    model = text_VAE(vocab=vocab,
+                     latent_dims=args.latent_dims,
+                     n_layers=args.n_layers,
+                     embedding_dims = args.embedding_dims,
+                     hidden_dims=args.hidden_dims,
+                     dropout=args.drop_out,
+                     teacher_force_p=args.teacher_force_p,
+                     lr=args.lr,
+                     decoding_strategy=args.decoding_strategy,
+                     aggressive=args.aggressive,
+                     inner_iter=args.inner_iter,
+                     kl_weight_start=args.kl_weight_start,
+                     anneal_rate=anneal_rate)
+    model.automatic_optimization = False
 
     trainer.fit(model, train_loader, valid_loader)
 
     # Eval post training
-    model = lm_VAE.load_from_checkpoint(
+    model = text_VAE.load_from_checkpoint(
         trainer.checkpoint_callback.best_model_path)
 
     test_result = trainer.test(
@@ -167,30 +174,55 @@ def train(args):
 
     return test_result, trainer
 
-
 if __name__ == '__main__':
     # Feel free to add more argument parameters
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # Model hyperparameters
-    parser.add_argument('--kl_start', default=0.1, type=float,
-                        help='Start weight of KLD')
-    parser.add_argument('--warm_up', default=10, type=int,
-                        help='Number of epochs of KLD weight warm-up')
+    parser.add_argument('--latent_dims', default=32, type=int,
+                        help='Number of latent variables to encode to')
+    parser.add_argument('--n_layers', default=1, type=int,
+                        help='Number of LSTM layers')
+    parser.add_argument('--embedding_dims', default=512, type=int,
+                        help='Dimesionality of embedding space.')
+    parser.add_argument('--hidden_dims', default=1024, type=int,
+                        help='Number of LSTM hidden neurons. \
+                            For this model, also the latent dimensions.')
+    parser.add_argument('--drop_out', default=0.5, type=float,
+                        help='Probability of zeroing a neuron.')
+    parser.add_argument('--teacher_force_p', default=0.5, type=float,
+                        help='Probability of feeding correct answer. \
+                            Stabilizes training.')
+    parser.add_argument('--decoding_strategy', default='greedy', type=str,
+                        choices=['greedy', 'sample'],
+                        help='Strategy for decoding, whether sampling \
+                            or reconstructing.')
 
     # Loss and optimizer hyperparameters
-    parser.add_argument('--max_epochs', default=10, type=int,
-                        help='Max number of training batches')
-    parser.add_argument('--lr', default=5e-4, type=float,
+    parser.add_argument('--lr', default=1, type=float,
                         help='Learning rate to use')
-    parser.add_argument('--batch_size', default=16, type=int,
+    parser.add_argument('--batch_size', default=64, type=int,
                         help='Minibatch size')
+    parser.add_argument('--max_epochs', default=100, type=int,
+                        help='Max number of training batches')
+
+    # Aggressive Training hyperparameters
+    parser.add_argument('--aggressive', default=True,
+                        help='Whether or not to use aggressive training')
+    parser.add_argument('--inner_iter', default=100, type=int,
+                        help='Number of steps before assuming encoder has converged')
+    parser.add_argument('--kl_weight_start', default=0.1, type=float,
+                        help='Weight of the KLD term in the first step of training')
+    parser.add_argument('--warm_up', default=10, type=int,
+                        help='Number of epochs to warmup KLD weight')
 
     # Other hyperparameters
+    parser.add_argument('--fine_grained', default=False,
+                        help='Whether to train using 2 or 5 sentiment classes')
     parser.add_argument('--seed', default=42, type=int,
                         help='Seed to use for reproducing results')
-    parser.add_argument('--progress_bar', default=True, action='store_true',
+    parser.add_argument('--progress_bar', default=False, action='store_true',
                         help=('Use a progress bar indicator for interactive experimentation. '
                               'Not to be used in conjuction with SLURM jobs'))
     parser.add_argument('--sample_every', default=1, type=int,
@@ -198,6 +230,8 @@ if __name__ == '__main__':
     parser.add_argument('--log_dir', default='text_vae', type=str,
                         help='Directory where the PyTorch Lightning logs should be created. Automatically adds \
                             the classes to directory. If not needed, turn off using add_classes_to_cpt_path flag.')
+    parser.add_argument('--version', default='Test', type=str,
+                        help='Run name. For example, SLURM jobid.')
 
     # Debug parameters
     parser.add_argument('--debug', default=False,

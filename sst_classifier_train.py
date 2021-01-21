@@ -8,7 +8,7 @@ import torchtext
 
 from models.sst_bilstm_cnn import sst_bilstm_cnn
 from utils.reproducibility import set_seed, set_deterministic
-from datasets.sst import SST
+from datasets.sst import SST, get_glove_url
 
 CHECKPOINT_PATH = './checkpoints'
 
@@ -32,12 +32,12 @@ def train(args):
 
     vectors = torchtext.vocab.Vectors(name='glove.840B.300d.sst.txt',
                                       cache='./datasets/SST',
-                                      url='https://gist.githubusercontent.com/bastings/b094de2813da58056a05e8e7950d4ad1/raw/3fbd3976199c2b88de2ae62afc0ecc6f15e6f7ce/glove.840B.300d.sst.txt'
+                                      url=get_glove_url()
                                       )
 
     (train_loader, valid_loader, test_loader), (vocab, train_data) = SST.iters(batch_size=args.batch_size, repeat=True,
-                                                                               fine_grained=True, vectors=vectors,
-                                                                               device=device)
+                                                                               fine_grained=args.fine_grained, vectors=vectors,
+                                                                               device=device, pad_to_max=True)
 
     # Create a PyTorch Lightning trainer with the generation callback
     trainer = pl.Trainer(default_root_dir=full_log_dir,
@@ -46,9 +46,9 @@ def train(args):
                          gpus= 1 if (torch.cuda.is_available() and args.gpu) else 0,
                          max_epochs=args.max_epochs,
                          callbacks=[LearningRateMonitor("epoch")],
-                         progress_bar_refresh_rate= 1 if args.progress_bar_refresh else 0,
-                         fast_dev_run=args.debug,
-                         profiler='simple')
+                         progress_bar_refresh_rate= args.progress_bar_refresh,
+                         fast_dev_run=args.debug
+                         )
 
     trainer.logger._default_hp_metric = None
 
@@ -65,8 +65,8 @@ def train(args):
                            cnn_ksize=args.cnn_ksize,
                            max_ksize=args.max_ksize,
                            M=5 if args.fine_grained else 2,
-                           input_shape=(82, args.batch_size),
                            lr=args.lr,
+                           padded_length = 82,
                            lr_decay=args.lr_decay)
 
     # Fit
@@ -96,9 +96,9 @@ if __name__ == '__main__':
 
     parser.add_argument('--fine_grained', default=False,
                         help='Whether to train on 2 or 5 classes')
-    parser.add_argument('--dropout', default=[0.1, 0.1, 0.1],
+    parser.add_argument('--dropout', default=[0.5, 0.1, 0.5],
                         help='Probability of dropping neurons in the different dropout layers')
-    parser.add_argument('--lstm_hidden', default=1024, type=int,
+    parser.add_argument('--lstm_hidden', default=256, type=int,
                         help='Number of hidden nodes in the BiLSTM')
     parser.add_argument('--cnn_filters', default=32, type=int,
                         help='Number of filters in the CNN layer')
@@ -108,14 +108,14 @@ if __name__ == '__main__':
                         help='Kernel size of the max pool layer')
 
     # Loss and optimizer hyperparameters
-    parser.add_argument('--lr', default=1e-4, type=float,
+    parser.add_argument('--lr', default=1e-3, type=float,
                         help='Learning rate to use')
-    parser.add_argument('--lr_decay', default=0.9, type=float,
+    parser.add_argument('--lr_decay', default=0.85, type=float,
                         help='Epoch based learning rate decay')
-    parser.add_argument('--batch_size', default=16, type=int,
-                        help='Minibatch size')
-    parser.add_argument('--max_epochs', default=15, type=int,
+    parser.add_argument('--max_epochs', default=25, type=int,
                         help='Max number of training epochs')
+    parser.add_argument('--batch_size', default=64, type=int,
+                        help='Minibatch size')
 
     # Other hyperparameters
     parser.add_argument('--seed', default=42, type= int,

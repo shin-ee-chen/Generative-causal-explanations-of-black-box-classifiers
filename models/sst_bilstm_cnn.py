@@ -6,7 +6,7 @@ import pytorch_lightning as pl
 
 class sst_bilstm_cnn(pl.LightningModule):
 
-    def __init__(self, vocab, dropout, lstm_hidden, filters, cnn_ksize, max_ksize, M, input_shape, lr, lr_decay):
+    def __init__(self, vocab, dropout, lstm_hidden, filters, cnn_ksize, max_ksize, padded_length, M, lr, lr_decay):
         super().__init__()
         self.save_hyperparameters()
 
@@ -16,7 +16,6 @@ class sst_bilstm_cnn(pl.LightningModule):
         self.cnn_ksize = cnn_ksize
         self.max_ksize = max_ksize
         self.M = M
-        self.input_shape = input_shape
         self.lr = lr
         self.lr_decay = lr_decay
 
@@ -24,7 +23,6 @@ class sst_bilstm_cnn(pl.LightningModule):
             nn.Embedding(num_embeddings=vocab.vectors.size(0), embedding_dim=vocab.vectors.size(1), padding_idx=vocab['<pad>']),
             nn.Dropout(p=self.dropout[0])
             )
-
         self.embedding[0].weight.data.copy_(vocab.vectors)
         self.embedding[0].weight.requires_grad = False
 
@@ -45,13 +43,16 @@ class sst_bilstm_cnn(pl.LightningModule):
             nn.MaxPool2d(kernel_size=self.max_ksize),
         )
 
-        # height = ((input_shape[0] - self.cnn_ksize + 1) - self.max_ksize + 1)
-        # width = ((input_shape[1] - self.cnn_ksize + 1) - self.max_ksize + 1)
+        height, width = padded_length, self.lstm_hidden
+        for i in range(3):
+            height = int(((height - self.cnn_ksize + 1) - self.max_ksize)/ self.max_ksize + 1)
+            width = int(((width - self.cnn_ksize + 1) - self.max_ksize) / self.max_ksize + 1)
+        print('Output shape of convolutions:', height, width)
 
         self.linear = nn.Sequential(
             nn.Flatten(),
             nn.Dropout(p=self.dropout[2]),
-            nn.Linear(in_features=self.filters * 8 * 126, out_features=self.M)
+            nn.Linear(in_features=self.filters * height * width, out_features=self.M)
         )
 
         self.loss_module = nn.CrossEntropyLoss()
@@ -61,7 +62,7 @@ class sst_bilstm_cnn(pl.LightningModule):
         embedding = self.embedding(text)
 
         (h, c) = self.lstm[0](embedding)
-        h = h.view(text.size(0), text.size(1), 2, 1024)
+        h = h.view(text.size(0), text.size(1), 2, self.lstm_hidden)
         rnn_output = self.lstm[1]((h[:, :, 0, :] + h[:, :, 1, :]).permute(1, 0, 2).unsqueeze(1))
 
         feature_maps = self.conv(rnn_output)
@@ -109,7 +110,6 @@ class sst_bilstm_cnn(pl.LightningModule):
 
         self.log('Valid loss', loss, on_epoch=True)
         self.log('Valid acc', acc, on_epoch=True)
-        print('Valid acc:', acc)
 
     def test_step(self, batch, batch_idx):
 

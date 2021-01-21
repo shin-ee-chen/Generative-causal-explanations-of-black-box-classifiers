@@ -16,7 +16,7 @@ FIGURE_PATH = './Figures'
 
 @torch.no_grad()
 def CVAE_sweep(model, i=0, rows=8, dataset=None, save_loc=None):
-    """Produces a sweep over a single latent variables in the (C)VAE, 
+    """Produces a sweep over a single latent variables in the (C)VAE,
     and saves the image to the './Figures' directory.
 
     Args:
@@ -27,14 +27,14 @@ def CVAE_sweep(model, i=0, rows=8, dataset=None, save_loc=None):
             Must be iterable.
         save_loc (path, optional): The name of the save. Defaults to named variable.
     """
-    
+
     latent_dim = model.K + model.L
     j = i+1
     label = 'alpha_{:d}'.format(
         j) if j <= model.K else 'beta_{:d}'.format(j-model.K)
     sweep_range = range(-3, 3+1, 1)
     colors = ['#FFC209', '#0B7ADC', '#8FC839', 'tab:red']
-    
+
     print('CVAE latent variable sweep for', label)
 
     dataloader = data.DataLoader(dataset, batch_size=rows, shuffle=False,
@@ -68,7 +68,7 @@ def CVAE_sweep(model, i=0, rows=8, dataset=None, save_loc=None):
             z[:, i] += z_val
             recon_img = torch.round(torch.sigmoid(model.decoder(z)))
             recon_img.detach_()
-            
+
             z_sweep.append(recon_img)
 
             z[:, i] -= z_val

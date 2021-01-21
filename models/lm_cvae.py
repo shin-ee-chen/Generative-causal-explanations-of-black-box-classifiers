@@ -1,4 +1,5 @@
 import math
+import time
 
 import numpy
 import torch
@@ -11,50 +12,63 @@ from utils.vae_loss import *
 
 class LSTM_Encoder(nn.Module):
 
-    def __init__(self, vocab, embedding_dims, hidden_dims, latent_dims):
+    def __init__(self, vocab, latent_dims, embedding_dims, n_layers, hidden_dims):
         super(LSTM_Encoder, self).__init__()
 
-        self.latent_dims = latent_dims
         self.vocab = vocab
+        self.latent_dims = latent_dims
+        self.embedding_dims = embedding_dims
+        self.n_layers = n_layers
+        self.hidden_dims = hidden_dims
+        self.layer_dim = n_layers * hidden_dims
 
-        padding_idx=vocab['<pad>']
-        self.embed = nn.Embedding(len(vocab), embedding_dims,
-                                  padding_idx=padding_idx)
+        self.embedding = nn.Embedding(num_embeddings=len(vocab),
+                                      embedding_dim=self.embedding_dims,
+                                      padding_idx=vocab['<pad>'])
 
-        self.lstm = nn.LSTM(input_size=embedding_dims,
-                            hidden_size=hidden_dims,
-                            num_layers=1,
-                            dropout=0,
+        self.lstm = nn.LSTM(input_size=self.embedding_dims,
+                            hidden_size=self.hidden_dims,
+                            num_layers=self.n_layers,
                             batch_first=False)
 
-        self.mean = nn.Linear(in_features=hidden_dims, out_features=latent_dims)
-        self.log_std = nn.Linear(in_features=hidden_dims, out_features=latent_dims)
+        self.mean = nn.Linear(in_features=2*self.layer_dim, out_features=self.latent_dims)
+        self.log_std = nn.Linear(in_features=2*self.layer_dim, out_features=self.latent_dims)
 
-        self.reset_parameters(std=0.01)
+        self.reset_parameters()
+
+    def reset_parameters(self, std=0.01):
+        for param in self.parameters():
+            nn.init.uniform_(param, -std, std)
+        nn.init.uniform_(self.embedding.weight, -std * 10, std * 10)
 
     @property
     def device(self):
         return next(self.parameters()).device
 
-    def reset_parameters(self, std=0.01):
-        for param in self.parameters():
-            nn.init.uniform_(param, -std, std)
-        nn.init.uniform_(self.embed.weight, -std*10, std*10)
-
     def forward(self, input):
 
-        # (batch_size, seq_len-1, args.ni)
-        embedding = self.embed(input)
+        # (seq_len, batch_size, embedding_dim)
+        embeddings = self.embedding(input)
 
-        _, (h_T, _) = self.lstm(embedding)
+        mean_, log_std_ = [], []
+        for t, token in enumerate(embeddings):
 
-        mean = self.mean(h_T)
-        log_std = self.log_std(h_T)
+            # (n_layers, batch_size, hidden_dim) x2
+            _, (h_t, c_t) = self.lstm(token.unsqueeze(0), None if t == 0 else (h_t, c_t))
 
-        return mean, log_std
+            # (batch_size, n_layers * hidden_dim * 2)
+            hidden_out = torch.cat([h_t, c_t], dim=2).contiguous().view(token.size(0), -1)
+
+            # (batch_size, n_layers * hidden_dim * 2) -> (batch_size, n_layers * hidden_dim * 2)
+            mean_.append(self.mean(hidden_out))
+            log_std_.append(self.log_std(hidden_out))
+
+        mean_, log_std_ = torch.stack(mean_), torch.stack(log_std_)
+
+        return mean_, log_std_
 
     @torch.no_grad()
-    def MutualInformation(self, x, stats=None, z_iters=1, debug=False):
+    def mi_input_latent(self, x, stats=None, z_iters=1, debug=False):
         """
         Approximate the mutual information between x and z,
         I(x, z) = E_xE_{q(z|x)}log(q(z|x)) - E_xE_{q(z|x)}log(q(z)).
@@ -71,7 +85,7 @@ class LSTM_Encoder(nn.Module):
 
         logvar = 2 * logstd
 
-        x_batch, z_dim = mean.shape[1], mean.shape[2]
+        x_batch, z_dim = mean.size(0), mean.size(1)
         z_batch = x_batch * z_iters
 
         # E_{q(z|x)}log(q(z|x)) = -0.5*(K+L)*log(2*\pi) - 0.5*(1+logvar).sum(-1)
@@ -80,7 +94,7 @@ class LSTM_Encoder(nn.Module):
         # [z_batch, 1, z_dim]
         z_samples = []
         for i in range(z_iters):
-            z_samples.append(sample_reparameterize(mean, logstd).permute(1, 0, 2))
+            z_samples.append(sample_reparameterize(mean, logstd).unsqueeze(1))
         z_samples = torch.cat(z_samples, dim=0)
         if debug: print('[z_batch, 1, z_dim]', z_samples.shape)
 
@@ -105,73 +119,91 @@ class LSTM_Encoder(nn.Module):
 
 class LSTM_Decoder(nn.Module):
 
-    def __init__(self, vocab, embedding_dims, hidden_dims, latent_dims):
+    def __init__(self, vocab, latent_dims, embedding_dims, n_layers, hidden_dims, dropout, teacher_force_p):
         super(LSTM_Decoder, self).__init__()
 
-        self.latent_dims = latent_dims
         self.vocab = vocab
+        self.latent_dims = latent_dims
+        self.embedding_dims = embedding_dims
+        self.n_layers = n_layers
+        self.hidden_dims = hidden_dims
+        self.dropout = dropout
+        self.layer_dim = n_layers * hidden_dims
+        self.teacher_force_p = teacher_force_p
 
-        padding_idx=vocab['<pad>']
-        self.embed = nn.Embedding(len(vocab), embedding_dims,
-                                  padding_idx=padding_idx)
+        self.linear_in = nn.Sequential(nn.Linear(in_features=latent_dims,
+                                                 out_features=self.layer_dim),
+                                       nn.Dropout(p=dropout)
+                                       )
 
-        self.dropout_in = nn.Dropout(p=0.5)
-        self.linear_in = nn.Linear(self.latent_dims, hidden_dims)
+        self.embedding = nn.Embedding(num_embeddings=len(vocab),
+                                      embedding_dim=embedding_dims,
+                         padding_idx=vocab['<pad>'])
 
-        self.lstm=nn.LSTM(input_size=embedding_dims + self.latent_dims,
-                          hidden_size=hidden_dims,
-                          num_layers=1,
-                          dropout=0,
-                          batch_first=False)
+        self.lstm = nn.LSTM(input_size=embedding_dims + self.hidden_dims,
+                       hidden_size=hidden_dims,
+                       num_layers=n_layers,
+                       batch_first=False)
 
-        self.dropout_out = nn.Dropout(p=0.5)
-        self.linear_out = nn.Linear(hidden_dims, len(vocab))
+        self.linear_out = nn.Sequential(nn.Dropout(p=dropout),
+                                        nn.Linear(in_features=hidden_dims, out_features=len(vocab))
+                                        )
 
-        self.reset_parameters(std=0.01)
+        self.reset_parameters()
+
+    def reset_parameters(self, std=0.01):
+        for param in self.parameters():
+            nn.init.uniform_(param, -std, std)
+        nn.init.uniform_(self.embedding.weight, -std * 10, std * 10)
 
     @property
     def device(self):
         return next(self.parameters()).device
 
-    def reset_parameters(self, std=0.01):
-        for param in self.parameters():
-            nn.init.uniform_(param, -std, std)
-        nn.init.uniform_(self.embed.weight, -std*10, std*10)
-
-    def forward(self, input, z, debug=False):
+    def forward(self, z, text=None, max_length=82):
         """
         Args:
             input: (batch_size, seq_len)
             z: (batch_size, n_sample, nz)
         """
 
-        n_sample, batch_size, z_dim = z.size()
-        seq_len = input.size(0)
+        z_ = self.linear_in(z)
 
-        # (seq_len, batch_size, embedding_dim)
-        word_embed = self.embed(input)
-        if debug: print('(seq_len, batch_size, embedding_dim)', word_embed.shape)
+        # (n_layers, batch_size, hidden_dim)
+        z_ = z_.view(self.n_layers, z.size(0), self.hidden_dims)
 
-        word_embed = self.dropout_in(word_embed)
+        # (n_layers, batch_size, hidden_dim)
+        c = z_
+        h = torch.tanh(c)
 
-        z_ = z.expand(seq_len, batch_size, z_dim)
+        input = torch.full(size=(1, z.size(0)), fill_value=self.vocab['<s>'],
+                           dtype=torch.long, device=self.device)
+        logits = []
+        for t in range(max_length - 1):
+            # (1, batch_size, embedding_dim)
+            embedded_dec = self.embedding(input)
 
-        # (seq_len, batch_size * n_sample, embedding_dim + z_dim)
-        word_embed = torch.cat((word_embed, z_), -1)
-        if debug: print('(seq_len, batch_size * n_sample, embedding_dim + z_dim)', word_embed.shape)
+            # (1, batch_size, embedding_dim + hidden_dim)
+            embedded_dec_a = torch.cat([embedded_dec, z_[-1, :, :].unsqueeze(0)], dim=-1)
 
-        z = z.view(batch_size * n_sample, z_dim)
-        c_init = self.linear_in(z).unsqueeze(0)
-        h_init = torch.tanh(c_init)
+            # (1, batch_size, hidden_dim)
+            output, (h, c) = self.lstm(embedded_dec_a, (h, c))
 
-        output, _ = self.lstm(word_embed, (h_init, c_init))
+            # (1, batch_size, vocab_size)
+            logits_t = self.linear_out(output)
 
-        # (seq_len, batch_size * n_sample, vocab_size)
-        output = self.dropout_out(output)
-        if debug: print('(seq_len, batch_size * n_sample, vocab_size)', output.shape)
-        output_logits = self.linear_out(output)
+            teacher_force = torch.rand((1)) < self.teacher_force_p
+            if teacher_force and text != None:
+                input = text[t + 1].unsqueeze(0)
+            else:
+                input = torch.argmax(logits_t, dim=-1)
 
-        return output_logits
+            logits.append(logits_t)
+
+        # (seq_len, batch_size, vocab_size)
+        logits = torch.cat(logits, dim=0)
+
+        return logits
 
     @torch.no_grad()
     def beam_search_decode(self, z, K=5, max_length=30):
@@ -289,55 +321,49 @@ class LSTM_Decoder(nn.Module):
         """greedy decoding from z
         Args:
             z: (batch_size, nz)
-        Returns: List1
-            List1: the decoded word sentence list
         """
 
-        batch_size, nz = z.size()
-        decoded_batch = [[] for _ in range(batch_size)]
+        z_ = self.linear_in(z)
 
-        # (1, batch_size, nz)
-        c_init = self.linear_in(z).unsqueeze(0)
-        h_init = torch.tanh(c_init)
+        # (n_layers, batch_size, hidden_dim)
+        z_ = z_.view(self.n_layers, z.size(0), self.hidden_dims)
 
-        decoder_hidden = (h_init, c_init)
-        decoder_input = torch.tensor([self.vocab["<s>"]] * batch_size,
-                                     dtype=torch.long, device=self.device).unsqueeze(0)
-        end_symbol = torch.tensor([self.vocab["</s>"]] * batch_size, dtype=torch.long, device=self.device)
+        # (n_layers, batch_size, hidden_dim)
+        c = z_
+        h = torch.tanh(c)
 
-        mask = torch.ones((batch_size), dtype=torch.uint8, device=self.device)
-        length_c = 1
-        while mask.sum().item() != 0 and length_c < max_length:
+        input = torch.full(size=(1, z.size(0)), fill_value=self.vocab['<s>'],
+                           dtype=torch.long, device=self.device)
+        tokens = []
+        for t in range(max_length - 1):
+            # (1, batch_size, embedding_dim)
+            embedded_dec = self.embedding(input)
 
-            # (batch_size, 1, ni) --> (batch_size, 1, ni+nz)
-            word_embed = self.embed(decoder_input)
-            word_embed = word_embed.squeeze(2)
-            word_embed = torch.cat((word_embed, z.unsqueeze(0)), dim=-1)
+            # (1, batch_size, embedding_dim + hidden_dim)
+            embedded_dec_a = torch.cat([embedded_dec, z_[-1, :, :].unsqueeze(0)], dim=-1)
 
-            output, decoder_hidden = self.lstm(word_embed, decoder_hidden)
+            # (1, batch_size, hidden_dim)
+            output, (h, c) = self.lstm(embedded_dec_a, (h, c))
 
-            # (batch_size, 1, vocab_size) --> (batch_size, vocab_size)
-            decoder_output = self.linear_out(output)
-            output_logits = decoder_output.squeeze(0)
+            # (1, batch_size, vocab_size)
+            logits_t = self.linear_out(output)
 
-            # (batch_size)
-            max_index = torch.argmax(output_logits, dim=1)
+            input = torch.argmax(logits_t, dim=-1)
+            tokens.append(input)
 
-            decoder_input = max_index.unsqueeze(0)
-            length_c += 1
+        # (seq_len, batch_size)
+        tokens = torch.cat(tokens)
 
-            for i in range(batch_size):
-                if mask[i].item():
-                    decoded_batch[i].append(self.vocab.itos[max_index[i].item()])
-
-            mask = (max_index != end_symbol) * mask
-
-        decoded_batch = [' '.join(sent) for sent in decoded_batch]
+        decoded_batch = []
+        for i in range(tokens.size(1)):
+            sent = tokens[:,i]
+            decoded_sent = [self.vocab.itos[sent[i].item()] for i in range(tokens.size(0))]
+            decoded_batch.append(' '.join(decoded_sent))
 
         return decoded_batch
 
     @torch.no_grad()
-    def sample_decode(self, z, max_length=30):
+    def sample_decode(self, z, tau=1, max_length=30):
         """sampling decoding from z
         Args:
             z: (batch_size, nz)
@@ -345,48 +371,277 @@ class LSTM_Decoder(nn.Module):
             List1: the decoded word sentence list
         """
 
-        batch_size, nz = z.size()
-        decoded_batch = [[] for _ in range(batch_size)]
+        """greedy decoding from z
+        Args:
+            z: (batch_size, nz)
+        """
 
-        # (1, batch_size, nz)
-        c_init = self.linear_in(z).unsqueeze(0)
-        h_init = torch.tanh(c_init)
+        z_ = self.linear_in(z)
 
-        decoder_hidden = (h_init, c_init)
-        decoder_input = torch.tensor([self.vocab["<s>"]] * batch_size, dtype=torch.long, device=self.device).unsqueeze(0)
-        end_symbol = torch.tensor([self.vocab["</s>"]] * batch_size, dtype=torch.long, device=self.device)
+        # (n_layers, batch_size, hidden_dim)
+        z_ = z_.view(self.n_layers, z.size(0), self.hidden_dims)
 
-        mask = torch.ones((batch_size), dtype=torch.uint8, device=self.device)
-        length_c = 1
-        while mask.sum().item() != 0 and length_c < max_length:
+        # (n_layers, batch_size, hidden_dim)
+        c = z_
+        h = torch.tanh(c)
 
-            # (batch_size, 1, ni) --> (batch_size, 1, ni+nz)
-            word_embed = self.embed(decoder_input)
-            word_embed = word_embed.squeeze(2)
-            word_embed = torch.cat((word_embed, z.unsqueeze(0)), dim=-1)
+        input = torch.full(size=(1, z.size(0)), fill_value=self.vocab['<s>'],
+                           dtype=torch.long, device=self.device)
+        tokens = []
+        for t in range(max_length - 1):
+            # (1, batch_size, embedding_dim)
+            embedded_dec = self.embedding(input)
 
-            output, decoder_hidden = self.lstm(word_embed, decoder_hidden)
+            # (1, batch_size, embedding_dim + hidden_dim)
+            embedded_dec_a = torch.cat([embedded_dec, z_[-1, :, :].unsqueeze(0)], dim=-1)
 
-            # (batch_size, 1, vocab_size) --> (batch_size, vocab_size)
-            decoder_output = self.linear_out(output)
-            output_logits = decoder_output.squeeze(0)
+            # (1, batch_size, hidden_dim)
+            output, (h, c) = self.lstm(embedded_dec_a, (h, c))
 
-            # (batch_size)
-            sample_prob = F.softmax(output_logits, dim=1)
-            sample_index = torch.multinomial(sample_prob, num_samples=1).squeeze()
+            # (1, batch_size, vocab_size)
+            logits_t = self.linear_out(output)
 
-            decoder_input = sample_index.unsqueeze(0)
-            length_c += 1
+            sample_prob = F.softmax(tau * logits_t, dim=-1)
+            input = torch.multinomial(sample_prob.squeeze(), num_samples=1).permute(1, 0)
 
-            for i in range(batch_size):
-                if mask[i].item():
-                    decoded_batch[i].append(self.vocab.itos[sample_index[i].item()])
+            tokens.append(input)
 
-            mask = (sample_index != end_symbol) * mask
+        # (seq_len, batch_size)
+        tokens = torch.cat(tokens)
 
-        decoded_batch = [' '.join(sent) for sent in decoded_batch]
+        decoded_batch = []
+        for i in range(tokens.size(1)):
+            sent = tokens[:, i]
+            decoded_sent = [self.vocab.itos[sent[i].item()] for i in range(tokens.size(0))]
+            decoded_batch.append(' '.join(decoded_sent))
 
         return decoded_batch
+
+class text_VAE(pl.LightningModule):
+
+    def __init__(self, vocab, latent_dims, embedding_dims, n_layers, hidden_dims, dropout, teacher_force_p, lr, decoding_strategy, aggressive, inner_iter, kl_weight_start, anneal_rate):
+        super().__init__()
+        self.save_hyperparameters()
+
+        self.vocab = vocab
+        self.latent_dims = latent_dims
+        self.embedding_dims = embedding_dims
+        self.n_layers = n_layers
+        self.hidden_dims = hidden_dims
+        self.dropout = dropout
+        self.teacher_force_p = teacher_force_p
+        self.lr = lr
+        self.decoding_strategy = decoding_strategy
+
+        # Aggressive training
+        self.aggressive = aggressive
+        self.inner_iter = inner_iter
+        self.kl_weight = kl_weight_start
+        self.anneal_rate = anneal_rate
+
+        self.encoder = LSTM_Encoder(vocab, latent_dims, embedding_dims, n_layers, hidden_dims)
+        self.decoder = LSTM_Decoder(vocab, latent_dims, embedding_dims, n_layers, hidden_dims, dropout, teacher_force_p)
+
+        self.t0 = time.time()
+
+    def forward(self, batch):
+
+        text, _ = batch.text, batch.label
+
+        mean, log_std = self.encoder(text)
+
+        z = sample_reparameterize(mean, log_std)
+
+        logits = self.decoder(z[-1], text, max_length=z.size(0))
+
+        return logits, mean, log_std
+
+    def training_step(self, batch, batch_idx, optimizer_idx):
+
+        if self.current_epoch > 4:
+            self.aggressive = False
+
+        if self.global_step == 0:
+            for schedule_dict in self.trainer.lr_schedulers:
+                schedule_dict['scheduler'].cooldown_counter = 14
+
+        (encoder_opt, decoder_opt) = self.optimizers()
+
+        i=0
+        if self.aggressive:
+
+            burn_num_words = 0
+            burn_pre_loss = 1e4
+            burn_cur_loss = 0
+            for i in range(self.inner_iter):
+                logits, mean, log_std = self.forward(batch)
+
+                predict = logits.view(-1, logits.size(-1))
+                targets = batch.text[1:].view(-1)
+
+                L_rec = F.cross_entropy(predict, targets, reduction='mean',
+                                        ignore_index=self.vocab['<pad>'])
+                L_reg = torch.mean(KLD(mean, log_std))
+
+                loss = L_rec + self.kl_weight * L_reg
+
+                burn_sents_len, burn_batch_size = batch.text.size()
+                burn_num_words += (burn_sents_len - 1) * burn_batch_size
+                burn_cur_loss += loss.sum().detach()
+
+                self.manual_backward(loss, encoder_opt)
+                encoder_opt.step()
+
+                if (i+1) % (self.inner_iter//5) == 0:
+                    burn_cur_loss = burn_cur_loss / burn_num_words
+                    if burn_pre_loss - burn_cur_loss < 0:
+                        self.log("Train Inner Steps", i)
+                        break
+                    burn_pre_loss = burn_cur_loss
+                    burn_cur_loss = burn_num_words = 0
+
+        logits, mean, log_std = self.forward(batch)
+
+        predict = logits.view(-1, logits.size(-1))
+        targets = batch.text[1:].view(-1)
+
+        L_rec = F.cross_entropy(predict, targets, reduction='mean',
+                                ignore_index=self.vocab['<pad>'])
+        L_reg = torch.mean(KLD(mean, log_std))
+
+        loss = L_rec + self.kl_weight * L_reg
+
+        if not self.aggressive:
+            self.manual_backward(loss, encoder_opt, retain_graph=True)
+        self.manual_backward(loss, decoder_opt)
+
+        if not self.aggressive:
+            encoder_opt.step()
+        decoder_opt.step()
+
+
+        self.log("Train L_rec", L_rec)
+        self.log("Train L_reg", L_reg)
+        self.log("Train ELBO", loss, prog_bar=True)
+        self.log("Train KLD Weight", self.kl_weight)
+
+        acc = (torch.argmax(predict, dim=-1).detach() == targets).float().mean()
+        self.log('Train acc', acc)
+
+        self.kl_weight = min(1.0, self.kl_weight + self.anneal_rate)
+
+        self.trainer.train_loop.running_loss.append(loss)
+
+        if batch_idx==0 or batch_idx % 5 == 0:
+            t1 = time.time()
+            dt = (t1 - self.t0) / 60
+            mins, secs = int(dt), int((dt - int(dt)) * 60)
+
+            print(f"Time: {mins:4d}m {secs:2d}s| Train {int(self.current_epoch):03d}.{int(batch_idx):03d}: L_rec={L_rec:6.2f}, L_reg={L_reg:6.2f}, Inner iters={int(i):02d}, KL weight={self.kl_weight:4.2f}, Acc={acc:.2f}")
+
+    def validation_step(self, batch, batch_idx):
+
+        text = batch.text
+
+        logits, mean, log_std = self.forward(batch)
+
+        predict = logits.view(-1, logits.size(2))
+        targets = text[1:].view(-1)
+
+        L_rec = F.cross_entropy(predict, targets, reduction='mean', ignore_index=self.vocab['<pad>'])
+        L_reg = torch.mean(KLD(mean, log_std))
+
+        elbo = L_rec + L_reg
+
+        self.log('Valid ELBO', elbo)
+        self.log('Valid L_rec', L_rec)
+        self.log('Valid L_reg', L_reg)
+
+        acc = (torch.argmax(predict, dim=-1).detach() == targets).float().mean()
+        self.log('Valid acc', acc)
+
+        mi = self.encoder.mi_input_latent(text, stats=(mean[-1], log_std[-1]), z_iters=10)
+        self.log('Encoder MI', mi)
+
+        t1 = time.time()
+        dt = (t1 - self.t0) / 60
+        mins, secs = int(dt), int((dt - int(dt)) * 60)
+
+        print(f"Time: {mins:4d}m {secs:2d}s| Valid {int(self.current_epoch):03d}.{int(batch_idx):03d}: L_rec={L_rec:6.2f}, L_reg={L_reg:6.2f}, Acc={acc:.2f}, MI={acc:5.2f}")
+
+    def test_step(self, batch, batch_idx):
+
+        text = batch.text
+
+        logits, mean, log_std = self.forward(batch)
+
+        predict = logits.view(-1, logits.size(2))
+        targets = text[1:].view(-1)
+
+        L_rec = F.cross_entropy(predict, targets, reduction='mean', ignore_index=self.vocab['<pad>'])
+        L_reg = torch.mean(KLD(mean, log_std))
+
+        elbo = L_rec + L_reg
+
+        self.log('Test ELBO', elbo)
+        self.log('Test L_rec', L_rec)
+        self.log('Test L_reg', L_reg)
+
+        acc = (torch.argmax(predict, dim=-1).detach() == targets).float().mean()
+        self.log('Test acc', acc)
+
+
+    #def configure_optimizers(self):
+    #    optimizer = optim.AdamW(self.parameters(), lr=self.lr, eps=1e-6, weight_decay=1e-4)
+    #
+    #    return [optimizer]
+
+    def configure_optimizers(self):
+        encoder_opt = optim.SGD(self.encoder.parameters(), lr=1.0, momentum=0)
+        decoder_opt = optim.SGD(self.decoder.parameters(), lr=1.0, momentum=0)
+
+        enc_sched = optim.lr_scheduler.ReduceLROnPlateau(encoder_opt, factor=0.5, patience=1, min_lr=1e-3,
+                                                        verbose=True)
+        enc_sched_dict = {
+            'scheduler': enc_sched,
+            'interval': 'epoch',
+            'frequency': 1,
+            'reduce_on_plateau': True,
+            'monitor': 'Valid ELBO',
+            'strict': True
+        }
+
+        dec_sched = optim.lr_scheduler.ReduceLROnPlateau(decoder_opt, factor=0.5, patience=1, min_lr=1e-3,
+                                                        verbose=True)
+        dec_sched_dict = {
+            'scheduler': dec_sched,
+            'interval': 'epoch',
+            'frequency': 1,
+            'reduce_on_plateau': True,
+            'monitor': 'Valid ELBO',
+            'strict': True
+        }
+
+        return [encoder_opt, decoder_opt], [enc_sched_dict, dec_sched_dict]
+
+    @torch.no_grad()
+    def reconstruct(self, text, decoding_strategy=None, beam_length=5):
+
+        mean, _ = self.encoder(text)
+        z = mean
+
+        if decoding_strategy == None:
+            decoding_strategy = self.decoding_strategy
+
+        if decoding_strategy == 'beam_search':
+            raise NotImplementedError()
+            #text_sample = self.decoder.beam_search_decode(z, beam_length)
+        elif decoding_strategy == 'greedy':
+            text_sample = self.decoder.greedy_decode(z[-1])
+        elif decoding_strategy == 'sample':
+            text_sample = self.decoder.sample_decode(z[-1])
+
+        return text_sample
 
 class lm_VAE(pl.LightningModule):
 
@@ -573,25 +828,6 @@ class lm_VAE(pl.LightningModule):
 
         self.log("Test ELBO", loss,
                  on_step=True, on_epoch=False)
-
-    #def optimizer_step(self, epoch, batch_idx, optimizer, optimizer_idx, optimizer_closure,
-    #                   on_tpu=False, using_native_amp=False, using_lbfgs=False):
-    #    # Update rules for the encoder
-    #    if epoch > 5:
-    #        self.aggressive = False
-    #
-    #    if self.aggressive:
-    #        if optimizer_idx == 0 and batch_idx <= self.inner_iter:
-    #            optimizer.step(closure=optimizer_closure)
-    #
-    #        elif optimizer_idx == 1 and batch_idx > self.inner_iter:
-    #            optimizer.step(closure=optimizer_closure)
-    #
-    #    else:
-    #        if optimizer_idx == 0:
-    #           optimizer.step(closure=optimizer_closure)
-    #        elif optimizer_idx == 1:
-    #            optimizer.step(closure=optimizer_closure)
 
     @torch.no_grad()
     def decode(self, text, decoding_strategy=None, beam_length=5):
