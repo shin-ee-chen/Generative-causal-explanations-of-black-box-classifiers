@@ -53,7 +53,8 @@ Ivo Verhoeven
 # Requirements
 
 # How to start
-### For getting Figure 5(ab) in the original pape, please run the following command
+### Figure 5(ab) for information flow and removing aspects
+For getting Figure 5(ab) in the original pape, please run the following command:
 ```
 python plot5ab.py
 ```
