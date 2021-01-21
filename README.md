@@ -53,18 +53,28 @@ Ivo Verhoeven
 # Requirements
 
 # How to start
-Train on fashion MNIST dataset:
+
+### Train on fashion MNIST dataset:
 1. To train CNN classifier:
-```sh
+```
    python mnist_classifier_train.py --max_epochs 50 --batch_size 64 --momentum 0.5  --lr 0.1  
    --classes 0 3 4 --datasets fashion
-   ```
+ ```
 
 2. To train VAE and generate FIgure 17:
-```sh
+```
    python mnist_cvae_train.py --classes 0 3 4  --max_steps 8000 --batch_size 32 --lr 1e-4 
    --Nalpha 100 --Nbeta 25 --K 2 --L 4 --lamb 0.05 --dataset fashion
-   ```
+ ```
+
+### Figure 5(ab) for information flow and removing aspects
+For getting Figure 5(ab) in the original pape, please run the following command:
+```
+python plot5ab.py
+```
+The produced figures would be in the directory figures/Figure5ab.
+
+
 
 # Results
 For images visualising CVAE's latent space, see the figures directory. Images generated during training are stored as, Model>Epoch>Variable.

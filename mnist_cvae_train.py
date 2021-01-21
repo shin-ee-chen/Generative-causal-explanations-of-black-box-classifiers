@@ -41,7 +41,7 @@ class GenerateCallback(pl.Callback):
         """
         if self.every_n_epochs == -1:
             self.sweep_and_save(trainer, pl_module, save_loc=trainer.logger._version)
-    
+
     def on_epoch_end(self, trainer, pl_module):
         """
         This function is called after every epoch.
@@ -107,7 +107,7 @@ def train(args):
     Inputs:
         args - Namespace object from the argument parser
     """
-       
+
     assert len(args.classes) == args.M
 
     if args.add_classes_to_cpt_path == True:
@@ -134,7 +134,7 @@ def train(args):
                                    drop_last=True, pin_memory=True, num_workers=0)
     test_loader = data.DataLoader(test_set, batch_size=args.batch_size, shuffle=False,
                                   drop_last=True, pin_memory=True, num_workers=0)
-    
+
     gen_callback = GenerateCallback(batch_size=8, save_to_disk=True, every_n_epochs=args.sample_every, valid_data=valid_set)
 
     trainer = pl.Trainer(default_root_dir=full_log_dir,
@@ -168,7 +168,7 @@ def train(args):
     # Eval post training
     model = MNIST_CVAE.load_from_checkpoint(
         trainer.checkpoint_callback.best_model_path)
-    
+
     test_result = trainer.test(
         model, test_dataloaders=test_loader, verbose=True)
     
@@ -193,7 +193,7 @@ if __name__ == '__main__':
     parser.add_argument('--classes', default=[1, 4, 9],
                         type=int, nargs='+',
                         help='The classes permittible for classification')
-    parser.add_argument('--classifier_path', type=str, 
+    parser.add_argument('--classifier_path', type=str,
                         help='This is the directory INSIDE of models where pre-trained \
                             black-box classifier is. Necessary if naming convention is not \
                                 adhered to')
@@ -209,7 +209,7 @@ if __name__ == '__main__':
                         help='VAE-loss coefficient')
 
     # Loss and optimizer hyperparameters
-    parser.add_argument('--max_steps', default=8000, type=int,
+    parser.add_argument('--max_steps', default=500, type=int,
                         help='Max number of training batches')
     parser.add_argument('--lr', default=5e-4, type=float,
                         help='Learning rate to use')
@@ -248,4 +248,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     test_result, trainer = train(args)
-    
