@@ -68,11 +68,19 @@ def train(args):
         model, test_dataloaders=test_loader, verbose=False)
     result = {"Test": test_result[0]["Test_acc"],
               "Valid": val_result[0]["Test_acc"]}
-    save_folder = './pretrained_models/'+ args.log_dir + '/'
+
+    if args.classes == [1, 4, 9]:
+        classifier_path = './pretrained_models/mnist_cnn149/'
+
+    if args.classes == [3, 8]:
+        classifier_path = './pretrained_models/mnist_cnn38/'
+        
+    if args.classes == [0, 3, 4]:
+        classifier_path = './pretrained_models/mnist_cnn034/'
 
     torch.save({
     'model_state_dict_classifier': model.state_dict()
-        }, os.path.join(save_folder, 'model.pt'))
+        }, os.path.join(classifier_path, 'model.pt'))
 
     return model, result
 
