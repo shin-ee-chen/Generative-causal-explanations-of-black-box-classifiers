@@ -17,6 +17,14 @@ def train(args):
     Inputs:
         args - Namespace object from the argparser
     """
+    if args.classes == [1, 4, 9]:
+        classifier_path = './pretrained_models/mnist_cnn149/'
+
+    if args.classes == [3, 8]:
+        classifier_path = './pretrained_models/mnist_cnn38/'
+        
+    if args.classes == [0, 3, 4]:
+        classifier_path = './pretrained_models/fmnist_cnn034/'
 
     if args.add_classes_to_cpt_path == True:
         classes_str = ''.join(str(x) for x in sorted(args.classes))
@@ -55,38 +63,42 @@ def train(args):
 
     model = MNIST_CNN(model_param_set=args.clf_param_set, M=M,
                         lr=args.lr, momentum=args.momentum)
-    trainer.fit(model, train_loader, valid_loader)
+    if args.pretrained == False:
+        trainer.fit(model, train_loader, valid_loader)
 
-    # Eval post training
-    model = MNIST_CNN.load_from_checkpoint(
-        trainer.checkpoint_callback.best_model_path)
+        # Eval post training
+        model = MNIST_CNN.load_from_checkpoint(
+            trainer.checkpoint_callback.best_model_path)
 
-    # Test results
-    val_result = trainer.test(
-        model, test_dataloaders=valid_loader, verbose=False)
-    test_result = trainer.test(
-        model, test_dataloaders=test_loader, verbose=False)
-    result = {"Test": test_result[0]["Test_acc"],
-              "Valid": val_result[0]["Test_acc"]}
+        # Test results
+        val_result = trainer.test(
+            model, test_dataloaders=valid_loader, verbose=False)
+        test_result = trainer.test(
+            model, test_dataloaders=test_loader, verbose=False)
+        result = {"Test": test_result[0]["Test_acc"],
+                "Valid": val_result[0]["Test_acc"]}
 
-    if args.classes == [1, 4, 9]:
-        classifier_path = './pretrained_models/mnist_cnn149/'
 
-    if args.classes == [3, 8]:
-        classifier_path = './pretrained_models/mnist_cnn38/'
-        
-    if args.classes == [0, 3, 4]:
-        classifier_path = './pretrained_models/fmnist_cnn034/'
 
-    torch.save({
-    'model_state_dict_classifier': model.state_dict()
-        }, os.path.join(classifier_path, 'model.pt'))
+        torch.save({
+        'model_state_dict_classifier': model.state_dict()
+            }, os.path.join(classifier_path, 'model.pt'))
+    if args.pretrained == True:
+        checkpoint_model_cnn = torch.load(os.path.join(classifier_path,'model.pt'), map_location=device)
+        model.load_state_dict(checkpoint_model_cnn['model_state_dict_classifier'])
+
+        test_result = trainer.test(
+            model, test_dataloaders=test_loader, verbose=True)
 
     return model, result
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    # whether to load from pretriained model
+    parser.add_argument('--pretrained', default=False, type=bool, 
+                        help='Whether to load pretrained model')
 
     # Model hyperparameters
     parser.add_argument('--clf_param_set', default='OShaugnessy',

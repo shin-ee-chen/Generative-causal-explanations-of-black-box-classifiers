@@ -105,6 +105,14 @@ def train(args):
     Inputs:
         args - Namespace object from the argument parser
     """
+    if args.classes == [1, 4, 9]:
+        gce_path = './pretrained_models/mnist_cvae149/'
+
+    if args.classes == [3, 8]:
+        gce_path = './pretrained_models/mnist_cvae38/'
+
+    if args.classes == [0, 3, 4]:
+        gce_path = './pretrained_models/fmnist_cvae034/'
 
     assert len(args.classes) == args.M
 
@@ -120,24 +128,24 @@ def train(args):
     test_set = MNIST_limited(train=False, classes=args.classes)
 
     train_loader = data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True,
-                                   drop_last=True, pin_memory=True, num_workers=0)
+                                drop_last=True, pin_memory=True, num_workers=0)
     valid_loader = data.DataLoader(valid_set, batch_size=args.batch_size, shuffle=False,
-                                   drop_last=True, pin_memory=True, num_workers=0)
+                                drop_last=True, pin_memory=True, num_workers=0)
     test_loader = data.DataLoader(test_set, batch_size=args.batch_size, shuffle=False,
-                                  drop_last=True, pin_memory=True, num_workers=0)
+                                drop_last=True, pin_memory=True, num_workers=0)
 
     gen_callback = GenerateCallback(batch_size=8, save_to_disk=True, every_n_epochs=args.sample_every, valid_data=valid_set)
 
     trainer = pl.Trainer(default_root_dir=full_log_dir,
-                         checkpoint_callback=ModelCheckpoint(
-                             save_weights_only=True, mode="min", monitor="Valid Causal Loss"),
-                         gpus=1 if (torch.cuda.is_available() and args.gpu) else 0,
-                         max_steps=args.max_steps,
-                         val_check_interval=1.0,
-                         callbacks=[gen_callback],
-                         progress_bar_refresh_rate=5 if args.progress_bar else 0,
-                         fast_dev_run=args.debug
-                         )
+                        checkpoint_callback=ModelCheckpoint(
+                            save_weights_only=True, mode="min", monitor="Valid Causal Loss"),
+                        gpus=1 if (torch.cuda.is_available() and args.gpu) else 0,
+                        max_steps=args.max_steps,
+                        val_check_interval=1.0,
+                        callbacks=[gen_callback],
+                        progress_bar_refresh_rate=5 if args.progress_bar else 0,
+                        fast_dev_run=args.debug
+                        )
 
     trainer.logger._default_hp_metric = None
 
@@ -148,33 +156,32 @@ def train(args):
         trainer.logger._version =  'debug' # str(args.model) + '_' + str(args.z_dim) + '_' + str(args.seed)
 
     model = MNIST_CVAE(args.classes,
-                      num_filters=args.num_filters,
-                      K=args.K, L=args.L, M=args.M,
-                      lamb=args.lamb, lr=args.lr,
-                      betas=args.betas,
-                      Nalpha=args.Nalpha, Nbeta=args.Nbeta,
-                      classifier_path=args.classifier_path)
-    trainer.fit(model, train_loader, valid_loader)
+                    num_filters=args.num_filters,
+                    K=args.K, L=args.L, M=args.M,
+                    lamb=args.lamb, lr=args.lr,
+                    betas=args.betas,
+                    Nalpha=args.Nalpha, Nbeta=args.Nbeta,
+                    classifier_path=args.classifier_path)
+    if args.pretrained == False:                    
+        trainer.fit(model, train_loader, valid_loader)
 
-    # Eval post training
-    model = MNIST_CVAE.load_from_checkpoint(
-        trainer.checkpoint_callback.best_model_path)
+        # Eval post training
+        model = MNIST_CVAE.load_from_checkpoint(
+            trainer.checkpoint_callback.best_model_path)
 
-    test_result = trainer.test(
-        model, test_dataloaders=test_loader, verbose=True)
+        test_result = trainer.test(
+            model, test_dataloaders=test_loader, verbose=True)
 
-    if args.classes == [1, 4, 9]:
-        gce_path = './pretrained_models/mnist_cvae149/'
+        # gce_path = './pretrained_models/'+ args.log_dir + '/'
 
-    if args.classes == [3, 8]:
-        gce_path = './pretrained_models/mnist_cvae38/'
+        torch.save(model, os.path.join(gce_path,'model.pt'))
 
-    if args.classes == [0, 3, 4]:
-        gce_path = './pretrained_models/fmnist_cvae034/'
+    if args.pretrained == True:
+        checkpoint_model_gce = torch.load(os.path.join(gce_path,'model.pt'), map_location=device)
+        model.load_state_dict(checkpoint_model_gce['model_state_dict_classifier'])
 
-    # gce_path = './pretrained_models/'+ args.log_dir + '/'
-
-    torch.save(model, os.path.join(gce_path,'model.pt'))
+        test_result = trainer.test(
+            model, test_dataloaders=test_loader, verbose=True)
 
     return test_result, trainer
 
@@ -182,6 +189,9 @@ if __name__ == '__main__':
     # Feel free to add more argument parameters
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    # whether to load from pretriained model
+    parser.add_argument('--pretrained', default=False, type=bool, 
+                        help='Whether to load pretrained model')
 
     # Model hyperparameters
     parser.add_argument('--classes', default=[1, 4, 9],
