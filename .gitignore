@@ -57,3 +57,5 @@ Scratchpad.py
 Scratchpad.ipynb
 .vscode
 debug/
+
+*.job
