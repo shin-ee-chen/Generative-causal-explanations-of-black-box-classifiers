@@ -66,7 +66,6 @@ def CVAE_sweep(model, i=0, rows=8, dataset=None, save_loc=None):
         for z_val in sweep_range:
 
             z[:, i] += z_val
-            # recon_img = torch.round(torch.sigmoid(model.decoder(z)))
             recon_img = torch.sigmoid(model.decoder(z))
             recon_img.detach_()
             

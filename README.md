@@ -53,7 +53,7 @@ Ivo Verhoeven
 # Requirements
 
 # How to start
-Testing with fashion MNIST images:
+Train on fashion MNIST dataset:
 1. To train CNN classifier:
 ```sh
    python mnist_classifier_train.py --max_epochs 50 --batch_size 64 --momentum 0.5  --lr 0.1  
