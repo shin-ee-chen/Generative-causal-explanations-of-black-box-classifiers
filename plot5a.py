@@ -60,8 +60,8 @@ def train(args):
     ax.yaxis.grid(linewidth='0.3')
     plt.ylabel('Information flow to $\\widehat{Y}$')
     plt.title('Information flow of individual causal factors')
-    plt.savefig('./figures/fig5a.svg')
-    plt.savefig('./figures/fig5a.png')
+    plt.savefig('./figures/Figure5ab/fig5a.svg')
+    plt.savefig('./figures/Figure5ab/fig5a.png')
     print("done 5a")
 
     # --- load test data ---
@@ -135,8 +135,8 @@ def train(args):
     plt.yticks((0.2,0.4,0.6))#,('0.5','','0.75','','1.0'))
     plt.ylabel('Classifier accuracy')
     plt.title('Classifier accuracy after removing aspect')
-    plt.savefig('./figures/fig5b.svg')
-    plt.savefig('./figures/fig5b.png')
+    plt.savefig('./figures/Figure5ab/fig5b.svg')
+    plt.savefig('./figures/Figure5ab/fig5b.png')
 
 
 
