@@ -186,7 +186,7 @@ def train(args):
     if not os.path.exists(gce_path):
         os.mkdir(gce_path)
 
-    torch.save(cvae_model, os.path.join(gce_path,'cvae_model.pt'))
+    torch.save(model, os.path.join(gce_path,'cvae_model.pt'))
     
     return test_result, trainer
 
