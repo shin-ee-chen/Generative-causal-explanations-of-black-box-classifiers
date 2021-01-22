@@ -10,7 +10,7 @@ from math import floor, ceil, log10
 def plot(Ls, LDs, Ks, Cs, lambs, lambDs, prefix):
     """
     Helper function to produce plots from results of the hyperparameter search.
-    They are saved in the results/parameter_search folder.
+    They are saved in the figures/parameter_search folder.
     Inputs:
         Ls, LDs - values for the first plot
         Ks, Cs - values for the second plot
@@ -19,7 +19,7 @@ def plot(Ls, LDs, Ks, Cs, lambs, lambDs, prefix):
     """
     
     # Create folder for results
-    log_dir = os.path.join("results", "parameter_search")
+    log_dir = os.path.join("figures", "parameter_search")
     os.makedirs(log_dir, exist_ok=True)
     prefix = os.path.join(log_dir, prefix)
     
@@ -65,7 +65,7 @@ def plot(Ls, LDs, Ks, Cs, lambs, lambDs, prefix):
 def find_params(args):
     """
     Function to find optimal values for K, L and lambda based on Algorithm 1.
-    Produces plots that are saved in the results/parameter_search folder.
+    Produces plots that are saved in the figures/parameter_search folder.
     Inputs:
         args - parse arguments containing other hyperparameters to use
     """
