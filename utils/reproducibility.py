@@ -28,7 +28,7 @@ def set_deteministic():
     torch.backends.cudnn.benchmark = False
     
     
-def load_latest(trainer, save_name, inference=False, map_location=None):
+def load_latest(trainer, save_name, inference=False, map_location=None, silent = False):
     """Loads the last found model from the checkpoints directory
 
     Args:
@@ -36,14 +36,14 @@ def load_latest(trainer, save_name, inference=False, map_location=None):
         save_name: model name
         inference (bool, optional): whether or not to freeze weights. Defaults to False.
         map_location (device, optional): which device to map the loaded model to. Defaults to None.
+        silent (bool, optional): suppresses printing unless no model is found
     """
 
     def find_latest_version(save_name):
         save_loc = os.path.join(
             CHECKPOINT_PATH, save_name, 'lightning_logs')
         latest_version = os.listdir(save_loc)[-1]
-        print(os.path.join(save_loc, latest_version, 'checkpoints'), 
-              os.listdir(os.path.join(save_loc, latest_version, 'checkpoints')))
+        print(os.path.join(save_loc, latest_version, 'checkpoints'))
         cpt = os.listdir(os.path.join(
             save_loc, latest_version, 'checkpoints'))[-1]
 
@@ -51,8 +51,8 @@ def load_latest(trainer, save_name, inference=False, map_location=None):
 
     pretrained_filename = find_latest_version(save_name)
     if os.path.isfile(pretrained_filename):
-        print("Found pretrained model at %s" %
-                pretrained_filename)
+        if not silent:
+            print("Found pretrained model at %s" % pretrained_filename)
         # Automatically loads the model with the saved hyperparameters
         model = trainer.load_from_checkpoint(
             pretrained_filename, map_location=map_location)
