@@ -95,13 +95,13 @@ if __name__ == '__main__':
                         help='The classes permittible for classification')
     
     # Loss and optimizer hyperparameters
-    parser.add_argument('--lr', default=5e-4, type=float,
+    parser.add_argument('--lr', default=0.1, type=float,
                         help='Learning rate to use')
-    parser.add_argument('--momentum', default=0.9, type=float,
+    parser.add_argument('--momentum', default=0.5, type=float,
                         help='Learning rate to use')
     parser.add_argument('--batch_size', default=64, type=int,
                         help='Minibatch size')
-    parser.add_argument('--max_epochs', default=10, type=int,
+    parser.add_argument('--max_epochs', default=20, type=int,
                         help='Max number of training epochs')
 
     # Other hyperparameters
