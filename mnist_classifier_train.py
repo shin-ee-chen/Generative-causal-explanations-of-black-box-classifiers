@@ -1,5 +1,6 @@
 import os
 import argparse
+from distutils.util import strtobool
 
 import torch
 import pytorch_lightning as pl
@@ -51,7 +52,7 @@ def train(args):
                          max_epochs=args.max_epochs,
                          # Log learning rate every epoch
                          callbacks=[LearningRateMonitor("epoch")],
-                         progress_bar_refresh_rate=1)
+                         progress_bar_refresh_rate=args.progress_bar)
 
     trainer.logger._default_hp_metric = None
 
@@ -110,24 +111,24 @@ if __name__ == '__main__':
                         help='Seed to use for reproducing results')
     parser.add_argument('--num_workers', default=0, type=int,
                         help='Number of workers to use in the data loaders.')
-    parser.add_argument('--progress_bar', default=True, action='store_true',
+    parser.add_argument('--progress_bar', default=True, type=lambda x: bool(strtobool(x)),
                         help=('Use a progress bar indicator for interactive experimentation. '
                               'Not to be used in conjuction with SLURM jobs'))
     parser.add_argument('--log_dir', default='mnist_cnn', type=str,
                         help='Directory where the PyTorch Lightning logs should be created. Automatically adds \
                             the classes to directory. If not needed, turn off using add_classes_to_cpt_path flag.')
-    parser.add_argument('--add_classes_to_cpt_path', default=True,
+    parser.add_argument('--add_classes_to_cpt_path', default=True, type=lambda x: bool(strtobool(x)),
                         help='Whether to add the classes to cpt directory.')
                         
     parser.add_argument('--datasets', default='traditional',choices=['traditional', 'fashion'],
                         help='Datasets used for training: traditional or fashion')
 
     # Debug parameters
-    parser.add_argument('--debug_version', default=False,
+    parser.add_argument('--debug_version', default=False, type=lambda x: bool(strtobool(x)),
                         help=('Whether to check debugs, etc.'))
-    parser.add_argument('--fast_dev_run', default=False,
+    parser.add_argument('--fast_dev_run', default=False, type=lambda x: bool(strtobool(x)),
                         help=('Whether to check debugs, etc.'))
-    parser.add_argument('--gpu', default=True, action='store_true',
+    parser.add_argument('--gpu', default=True, type=lambda x: bool(strtobool(x)),
                         help=('Whether to train on GPU (if available) or CPU'))
 
     args = parser.parse_args()
