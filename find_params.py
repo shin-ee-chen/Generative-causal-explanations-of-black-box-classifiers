@@ -241,6 +241,8 @@ if __name__ == '__main__':
                         help='Whether to add the classes to cpt directory.')
     parser.add_argument('--silent', default=True, type=lambda x: bool(strtobool(x)),
                         help='Perform training without printing to console or creating graphs.')
+    parser.add_argument('--datasets', default='traditional',choices=['traditional', 'fashion'],
+                        help='Datasets used for training: traditional or fashion')
 
     # Debug parameters
     parser.add_argument('--debug', default=False, type=lambda x: bool(strtobool(x)),
