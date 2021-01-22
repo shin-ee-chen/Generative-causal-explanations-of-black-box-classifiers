@@ -13,6 +13,8 @@ from distutils.util import strtobool
 
 from models.cvae import MNIST_CVAE
 from datasets.mnist import MNIST_limited
+from datasets.fashion_mnist import Fashion_MNIST_limited
+
 from utils.cvae_latent_visualization import CVAE_sweep
 from utils.reproducibility import set_seed, set_deteministic, load_latest
 
@@ -40,7 +42,7 @@ class GenerateCallback(pl.Callback):
         """
         if self.every_n_epochs == -1:
             self.sweep_and_save(trainer, pl_module, save_loc=trainer.logger._version)
-    
+
     def on_epoch_end(self, trainer, pl_module):
         """
         This function is called after every epoch.
@@ -52,7 +54,7 @@ class GenerateCallback(pl.Callback):
             trainer.current_epoch == 0 or
                 (trainer.current_epoch + 1) == trainer.max_epochs):
             #self.sample_and_save(trainer, pl_module, trainer.current_epoch+1)
-            self.sweep_and_save(trainer, pl_module, save_loc=trainer.logger._version+'_'+trainer.current_epoch)
+            self.sweep_and_save(trainer, pl_module, save_loc=f"{trainer.logger._version}_{trainer.current_epoch}")
             
         torch.cuda.empty_cache()
 
@@ -106,7 +108,7 @@ def train(args):
     Inputs:
         args - Namespace object from the argument parser
     """
-       
+
     assert len(args.classes) == args.M
 
     if args.add_classes_to_cpt_path == True:
@@ -117,8 +119,15 @@ def train(args):
     os.makedirs(full_log_dir, exist_ok=True)
 
     # Handling the training
-    train_set, valid_set = MNIST_limited(train=True, classes=args.classes)
-    test_set = MNIST_limited(train=False, classes=args.classes)
+    # train_set, valid_set = MNIST_limited(train=True, classes=args.classes)
+    # test_set = MNIST_limited(train=False, classes=args.classes)
+    if args.datasets == 'traditional':
+        train_set, valid_set = MNIST_limited(train=True, classes=args.classes)
+        test_set = MNIST_limited(train=False, classes=args.classes)
+    else:
+        train_set, valid_set = Fashion_MNIST_limited(train=True, classes=args.classes)
+        test_set = Fashion_MNIST_limited(train=False, classes=args.classes)
+        print(f"train_set:{len(train_set)}")
 
     train_loader = data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True,
                                    drop_last=True, pin_memory=True, num_workers=args.num_workers)
@@ -169,11 +178,21 @@ def train(args):
     # Eval post training
     model = MNIST_CVAE.load_from_checkpoint(
         trainer.checkpoint_callback.best_model_path)
-    
+
     test_result = trainer.test(
         model, test_dataloaders=test_loader, verbose=not args.silent)
+    
+    gce_path = './pretrained_models/'+ args.log_dir
+    if not os.path.exists(gce_path):
+        os.mkdir(gce_path)
 
+    torch.save(cvae_model, os.path.join(gce_path,'cvae_model.pt'))
+    
     return test_result, trainer
+
+
+
+
 
 if __name__ == '__main__':
     # Feel free to add more argument parameters
@@ -184,7 +203,7 @@ if __name__ == '__main__':
     parser.add_argument('--classes', default=[3, 8],
                         type=int, nargs='+',
                         help='The classes permittible for classification')
-    parser.add_argument('--classifier_path', type=str, 
+    parser.add_argument('--classifier_path', type=str,
                         help='This is the directory INSIDE of models where pre-trained \
                             black-box classifier is. Necessary if naming convention is not \
                                 adhered to')
@@ -202,7 +221,7 @@ if __name__ == '__main__':
                         help='Whether or not the causal influence term should be optimized along with the VAE loss.')
 
     # Loss and optimizer hyperparameters
-    parser.add_argument('--max_steps', default=8000, type=int,
+    parser.add_argument('--max_steps', default=500, type=int,
                         help='Max number of training batches')
     parser.add_argument('--lr', default=5e-4, type=float,
                         help='Learning rate to use')
@@ -231,6 +250,8 @@ if __name__ == '__main__':
                         help='Whether to add the classes to cpt directory.')
     parser.add_argument('--silent', default=False, type=lambda x: bool(strtobool(x)),
                         help='Perform training without printing to console or creating graphs.')
+    parser.add_argument('--datasets', default='traditional',choices=['traditional', 'fashion'],
+                        help='Datasets used for training: traditional or fashion')
 
     # Debug parameters
     parser.add_argument('--debug', default=False, type=lambda x: bool(strtobool(x)),
@@ -243,4 +264,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     test_result, trainer = train(args)
-    

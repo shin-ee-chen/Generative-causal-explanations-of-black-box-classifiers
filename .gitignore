@@ -57,3 +57,8 @@ Scratchpad.py
 Scratchpad.ipynb
 .vscode
 debug/
+
+*.out
+*.job
+.gitignore
+
