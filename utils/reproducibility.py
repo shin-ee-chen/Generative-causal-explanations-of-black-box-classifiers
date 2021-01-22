@@ -43,7 +43,7 @@ def load_latest(trainer, save_name, inference=False, map_location=None, silent =
         save_loc = os.path.join(
             CHECKPOINT_PATH, save_name, 'lightning_logs')
         latest_version = os.listdir(save_loc)[-1]
-        print(os.path.join(save_loc, latest_version, 'checkpoints'))
+        #print(os.path.join(save_loc, latest_version, 'checkpoints'))
         cpt = os.listdir(os.path.join(
             save_loc, latest_version, 'checkpoints'))[-1]
 
