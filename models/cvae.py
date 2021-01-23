@@ -116,7 +116,7 @@ class CNN_Decoder(nn.Module):
 
 class MNIST_CVAE(pl.LightningModule):
 
-    def __init__(self, classes, num_filters, K, L, M, lamb, lr, Nalpha, Nbeta, betas, classifier_path=None):
+    def __init__(self, classes, num_filters, K, L, M, lamb, lr, Nalpha, Nbeta, betas, classifier_path=None, use_C = True, silent = False):
         """
         PyTorch Lightning module that summarizes all components to train a VAE.
         Inputs:
@@ -129,6 +129,8 @@ class MNIST_CVAE(pl.LightningModule):
             lr - Learning rate to use for the optimizer
             Nalpha - Number of samples used to approximate the information flow loss
             Nbeta - Same as above, but then for the non-causal latent variables
+            use_C - Whether or not the causal influence term is included in the loss.
+            silent - suppress debug printing
         """
         super().__init__()
         self.save_hyperparameters()
@@ -144,6 +146,8 @@ class MNIST_CVAE(pl.LightningModule):
         self.Nbeta = Nbeta
         self.lr = lr
         self.betas = tuple(betas)
+        
+        self.use_C = use_C
 
         self.ceparams = {
             'Nalpha'           : Nalpha,
@@ -160,11 +164,10 @@ class MNIST_CVAE(pl.LightningModule):
 
         if classifier_path == None:
             self.classifier = load_latest(MNIST_CNN, 'mnist_cnn_'+self.classes_str,
-                                        inference=True, map_location=self.device)
+                                        inference=True, map_location=self.device, silent = silent)
         else:
             self.classifier = load_latest(MNIST_CNN, classifier_path,
-                                         inference=True, map_location=self.device)
-
+                                         inference=True, map_location=self.device, silent = silent)
 
     def forward(self, imgs):
         """
@@ -233,7 +236,7 @@ class MNIST_CVAE(pl.LightningModule):
         self.log("Train Causal Loss", C + self.lamb * (L_rec + L_reg), on_step=True, on_epoch=False)
         self.log("Train BPD", bpd, on_step=True, on_epoch=False)
 
-        return C + self.lamb * (L_rec + L_reg)  # bpd
+        return self.use_C * C + self.lamb * (L_rec + L_reg)  # bpd
 
     def validation_step(self, batch, batch_idx):
         # Make use of the forward function, and add logging statements
@@ -245,7 +248,7 @@ class MNIST_CVAE(pl.LightningModule):
         self.log("Valid Information Flow", C, on_step=False, on_epoch=True)
 
         self.log("Valid ELBO", L_rec + L_reg, on_step=False, on_epoch=True)
-        self.log("Valid Causal Loss", C + self.lamb * (L_rec + L_reg), on_step=False, on_epoch=True)
+        self.log("Valid Causal Loss", self.use_C * C + self.lamb * (L_rec + L_reg), on_step=False, on_epoch=True)
         self.log("Valid BPD", bpd, on_step=False, on_epoch=True)
 
     def test_step(self, batch, batch_idx):
@@ -254,7 +257,7 @@ class MNIST_CVAE(pl.LightningModule):
         self.log("Test Information Flow", C, on_step=False, on_epoch=True)
         self.log("Test ELBO", L_rec + L_reg, on_step=False, on_epoch=True)
         self.log("Test BPD", bpd, on_step=False, on_epoch=True)
-        self.log("Test Causal Loss", C + self.lamb * (L_rec + L_reg), on_step=False, on_epoch=True)
+        self.log("Test Causal Loss", self.use_C * C + self.lamb * (L_rec + L_reg), on_step=False, on_epoch=True)
 
     @torch.no_grad()
     def sample(self, batch_size: int):

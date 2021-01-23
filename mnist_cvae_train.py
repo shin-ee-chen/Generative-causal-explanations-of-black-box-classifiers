@@ -9,6 +9,7 @@ import torch.utils.data as data
 from torchvision.utils import make_grid, save_image
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
+from distutils.util import strtobool
 
 from models.cvae import MNIST_CVAE
 from datasets.mnist import MNIST_limited
@@ -129,13 +130,22 @@ def train(args):
         print(f"train_set:{len(train_set)}")
 
     train_loader = data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True,
-                                   drop_last=True, pin_memory=True, num_workers=0)
+                                   drop_last=True, pin_memory=True, num_workers=args.num_workers)
     valid_loader = data.DataLoader(valid_set, batch_size=args.batch_size, shuffle=False,
-                                   drop_last=True, pin_memory=True, num_workers=0)
+                                   drop_last=True, pin_memory=True, num_workers=args.num_workers)
     test_loader = data.DataLoader(test_set, batch_size=args.batch_size, shuffle=False,
-                                  drop_last=True, pin_memory=True, num_workers=0)
+                                  drop_last=True, pin_memory=True, num_workers=args.num_workers)
+    
+    if args.silent:
+        callbacks = []
+        import logging
+        logging.getLogger('lightning').setLevel(logging.WARNING)
+    else:
+        callbacks = [GenerateCallback(batch_size=8, save_to_disk=True, every_n_epochs=args.sample_every, valid_data=valid_set)]
+    
+    set_deteministic()
 
-    gen_callback = GenerateCallback(batch_size=8, save_to_disk=True, every_n_epochs=args.sample_every, valid_data=valid_set)
+    set_seed(42)
 
     trainer = pl.Trainer(default_root_dir=full_log_dir,
                          checkpoint_callback=ModelCheckpoint(
@@ -143,15 +153,13 @@ def train(args):
                          gpus=1 if (torch.cuda.is_available() and args.gpu) else 0,
                          max_steps=args.max_steps,
                          val_check_interval=1.0,
-                         callbacks=[gen_callback],
-                         progress_bar_refresh_rate=5 if args.progress_bar else 0,
+                         callbacks=callbacks,
+                         progress_bar_refresh_rate=5 if args.progress_bar and not args.silent else 0,
+                         weights_summary=None if args.silent else 'top',
                          fast_dev_run=args.debug
                          )
 
     trainer.logger._default_hp_metric = None
-
-    set_seed(42)
-    set_deteministic()
 
     if args.debug:
         trainer.logger._version =  'debug' # str(args.model) + '_' + str(args.z_dim) + '_' + str(args.seed)
@@ -162,7 +170,9 @@ def train(args):
                       lamb=args.lamb, lr=args.lr,
                       betas=args.betas,
                       Nalpha=args.Nalpha, Nbeta=args.Nbeta,
-                      classifier_path=args.classifier_path)
+                      classifier_path=args.classifier_path,
+                      use_C = args.use_C,
+                      silent = args.silent)
     trainer.fit(model, train_loader, valid_loader)
 
     # Eval post training
@@ -170,13 +180,13 @@ def train(args):
         trainer.checkpoint_callback.best_model_path)
 
     test_result = trainer.test(
-        model, test_dataloaders=test_loader, verbose=True)
+        model, test_dataloaders=test_loader, verbose=not args.silent)
     
     gce_path = './pretrained_models/'+ args.log_dir
     if not os.path.exists(gce_path):
         os.mkdir(gce_path)
 
-    torch.save(cvae_model, os.path.join(gce_path,'cvae_model.pt'))
+    torch.save(model, os.path.join(gce_path,'cvae_model.pt'))
     
     return test_result, trainer
 
@@ -190,7 +200,7 @@ if __name__ == '__main__':
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # Model hyperparameters
-    parser.add_argument('--classes', default=[1, 4, 9],
+    parser.add_argument('--classes', default=[3, 8],
                         type=int, nargs='+',
                         help='The classes permittible for classification')
     parser.add_argument('--classifier_path', type=str,
@@ -201,21 +211,23 @@ if __name__ == '__main__':
                         help='Number of filters used in the encoders/decoders')
     parser.add_argument('--K', default=2, type=int,
                         help='Dimensionality of causal latent space')
-    parser.add_argument('--L', default=2, type=int,
+    parser.add_argument('--L', default=6, type=int,
                         help='Dimensionality of non-causal latent space')
-    parser.add_argument('--M', default=3, type=int,
+    parser.add_argument('--M', default=2, type=int,
                         help='Dimensionality of classifier output')
     parser.add_argument('--lamb', default=0.1, type=float,
                         help='VAE-loss coefficient')
+    parser.add_argument('--use_C', default=True, type=lambda x: bool(strtobool(x)),
+                        help='Whether or not the causal influence term should be optimized along with the VAE loss.')
 
     # Loss and optimizer hyperparameters
     parser.add_argument('--max_steps', default=500, type=int,
                         help='Max number of training batches')
     parser.add_argument('--lr', default=5e-4, type=float,
                         help='Learning rate to use')
-    parser.add_argument('--Nalpha', default=32, type=int,
+    parser.add_argument('--Nalpha', default=100, type=int,
                         help='Learning rate to use')
-    parser.add_argument('--Nbeta', default=16, type=int,
+    parser.add_argument('--Nbeta', default=25, type=int,
                         help='Learning rate to use')
     parser.add_argument('--batch_size', default=64, type=int,
                         help='Minibatch size')
@@ -226,7 +238,7 @@ if __name__ == '__main__':
     # Other hyperparameters
     parser.add_argument('--seed', default=42, type=int,
                         help='Seed to use for reproducing results')
-    parser.add_argument('--progress_bar', default=True, action='store_true',
+    parser.add_argument('--progress_bar', default=True, type=lambda x: bool(strtobool(x)),
                         help=('Use a progress bar indicator for interactive experimentation. '
                               'Not to be used in conjuction with SLURM jobs'))
     parser.add_argument('--sample_every', default=-1, type=int,
@@ -234,16 +246,20 @@ if __name__ == '__main__':
     parser.add_argument('--log_dir', default='mnist_cvae', type=str,
                         help='Directory where the PyTorch Lightning logs should be created. Automatically adds \
                             the classes to directory. If not needed, turn off using add_classes_to_cpt_path flag.')
-    parser.add_argument('--add_classes_to_cpt_path', default=True,
+    parser.add_argument('--add_classes_to_cpt_path', default=True, type=lambda x: bool(strtobool(x)),
                         help='Whether to add the classes to cpt directory.')
+    parser.add_argument('--silent', default=False, type=lambda x: bool(strtobool(x)),
+                        help='Perform training without printing to console or creating graphs.')
     parser.add_argument('--datasets', default='traditional',choices=['traditional', 'fashion'],
                         help='Datasets used for training: traditional or fashion')
 
     # Debug parameters
-    parser.add_argument('--debug', default=False,
+    parser.add_argument('--debug', default=False, type=lambda x: bool(strtobool(x)),
                         help=('Whether to check debugs, etc.'))
-    parser.add_argument('--gpu', default=True, action='store_true',
+    parser.add_argument('--gpu', default=True, type=lambda x: bool(strtobool(x)),
                         help=('Whether to train on GPU (if available) or CPU'))
+    parser.add_argument('--num_workers', default=0, type=int,
+                        help=('Number of workers to use for the dataloaders.'))
 
     args = parser.parse_args()
 
