@@ -44,9 +44,15 @@ def load_latest(trainer, save_name, inference=False, map_location=None, silent =
         return int(filename.rsplit('_', 1)[-1])
     
     def checkpoint_to_numbers(filename):
-        _, a, b = filename.split('=')
-        a = int(a[:-5]) # strip '-step'
-        b = int(b[:-5]) # strip '.ckpt'
+        parts = filename.split('=')
+        if len(parts) == 3: # epoch=[a]-step=[b].ckpt
+            a = int(parts[1][:-5]) # strip '-step'
+            b = int(parts[2][:-5]) # strip '.ckpt'
+        elif len(parts) == 2: # epoch=[a].ckpt
+            a = int(parts[1][:-5]) # strip '.ckpt'
+            b = 0
+        else:
+            return filename
         return (a, b)
     
     def find_latest_version(save_name):
