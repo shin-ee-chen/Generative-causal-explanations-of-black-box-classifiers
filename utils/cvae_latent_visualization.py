@@ -12,12 +12,12 @@ plt.rcParams["text.usetex"]
 
 from utils.vae_loss import sample_reparameterize, ELBO, ELBO_to_BPD
 
-FIGURE_PATH = './Figures'
+FIGURE_PATH = './figures'
 
 @torch.no_grad()
 def CVAE_sweep(model, i=0, rows=8, dataset=None, save_loc=None):
     """Produces a sweep over a single latent variables in the (C)VAE, 
-    and saves the image to the './Figures' directory.
+    and saves the image to the './figures' directory.
 
     Args:
         model ([type]): The traind CVAE which is used to explain the classifier.
