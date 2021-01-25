@@ -109,8 +109,6 @@ def train(args):
         args - Namespace object from the argument parser
     """
 
-    assert len(args.classes) == args.M
-
     if args.add_classes_to_cpt_path == True:
         classes_str = ''.join(str(x) for x in sorted(args.classes))
         full_log_dir = os.path.join(CHECKPOINT_PATH, args.log_dir + '_' + classes_str)
@@ -158,15 +156,15 @@ def train(args):
                          weights_summary=None if args.silent else 'top',
                          fast_dev_run=args.debug
                          )
-
+    
     trainer.logger._default_hp_metric = None
-
+    
     if args.debug:
         trainer.logger._version =  'debug' # str(args.model) + '_' + str(args.z_dim) + '_' + str(args.seed)
-
+    
     model = MNIST_CVAE(args.classes,
                       num_filters=args.num_filters,
-                      K=args.K, L=args.L, M=args.M,
+                      K=args.K, L=args.L, M=len(args.classes),
                       lamb=args.lamb, lr=args.lr,
                       betas=args.betas,
                       Nalpha=args.Nalpha, Nbeta=args.Nbeta,
@@ -213,8 +211,6 @@ if __name__ == '__main__':
                         help='Dimensionality of causal latent space')
     parser.add_argument('--L', default=6, type=int,
                         help='Dimensionality of non-causal latent space')
-    parser.add_argument('--M', default=2, type=int,
-                        help='Dimensionality of classifier output')
     parser.add_argument('--lamb', default=0.1, type=float,
                         help='VAE-loss coefficient')
     parser.add_argument('--use_C', default=True, type=lambda x: bool(strtobool(x)),
