@@ -16,15 +16,15 @@ CHECKPOINT_PATH =  './checkpoints'
 
 def train(args):
     """
+    Trains the classifier.
     Inputs:
-        args - Namespace object from the argparser
+        args - Namespace object from the argparser defining the hyperparameters etc.
     """
-
-    if args.add_classes_to_cpt_path == True:
+    
+    if args.add_classes_to_cpt_path:
         classes_str = ''.join(str(x) for x in sorted(args.classes))
-        full_log_dir = os.path.join(CHECKPOINT_PATH, args.log_dir + '_' + classes_str)
-    else:
-        full_log_dir = os.path.join(CHECKPOINT_PATH, args.log_dir)
+        args.log_dir +=  '_' + classes_str
+    full_log_dir = os.path.join(CHECKPOINT_PATH, args.log_dir)
     os.makedirs(full_log_dir, exist_ok=True)
 
     M = len(args.classes)
@@ -50,8 +50,7 @@ def train(args):
                          gpus=1 if (torch.cuda.is_available() and
                                     args.gpu) else 0,
                          max_epochs=args.max_epochs,
-                         # Log learning rate every epoch
-                         callbacks=[LearningRateMonitor("epoch")],
+                         callbacks=[LearningRateMonitor("epoch")], # Log learning rate every epoch
                          progress_bar_refresh_rate=args.progress_bar)
 
     trainer.logger._default_hp_metric = None
@@ -67,7 +66,6 @@ def train(args):
     model = MNIST_CNN.load_from_checkpoint(
         trainer.checkpoint_callback.best_model_path)
 
-
     # Test results
     val_result = trainer.test(
         model, test_dataloaders=valid_loader, verbose=False)
@@ -75,8 +73,9 @@ def train(args):
         model, test_dataloaders=test_loader, verbose=False)
     result = {"Test": test_result[0]["Test_acc"],
               "Valid": val_result[0]["Test_acc"]}
-    save_folder = './pretrained_models/'+ args.log_dir + '/'
-
+    
+    save_folder = os.path.join("pretrained_models", args.log_dir)
+    os.makedirs(save_folder, exist_ok=True)
     torch.save({
     'model_state_dict_classifier': model.state_dict()
         }, os.path.join(save_folder, 'model.pt'))
@@ -115,10 +114,11 @@ if __name__ == '__main__':
                         help=('Use a progress bar indicator for interactive experimentation. '
                               'Not to be used in conjuction with SLURM jobs'))
     parser.add_argument('--log_dir', default='mnist_cnn', type=str,
-                        help='Directory where the PyTorch Lightning logs should be created. Automatically adds \
-                            the classes to directory. If not needed, turn off using add_classes_to_cpt_path flag.')
+                        help='Name of the subdirectory for PyTorch Lightning logs and the final model. \
+                              Automatically adds the classes to directory. \
+                              If this is not needed, turn off using add_classes_to_cpt_path flag.')
     parser.add_argument('--add_classes_to_cpt_path', default=True, type=lambda x: bool(strtobool(x)),
-                        help='Whether to add the classes to cpt directory.')
+                        help='Whether to add the classes to log_dir.')
                         
     parser.add_argument('--datasets', default='traditional',choices=['traditional', 'fashion'],
                         help='Datasets used for training: traditional or fashion')
