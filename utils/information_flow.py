@@ -22,33 +22,31 @@ def CVAE_to_params(CVAE):
     return params, decoder, classifier, CVAE.device
 
 def joint_uncond(params, decoder, classifier, device):
-
-    eps = 1e-8
-    I = 0.0
-    q = torch.zeros(params['M']).to(device)
     zs = np.zeros((params['Nalpha']*params['Nbeta'], params['z_dim']))
 
     for i in range(0, params['Nalpha']):
         alpha = np.random.randn(params['K'])
-        zs = np.zeros((params['Nbeta'], params['z_dim']))
         for j in range(0, params['Nbeta']):
             beta = np.random.randn(params['L'])
-            zs[j, :params['K']] = alpha
-            zs[j, params['K']:] = beta
+            zs[i * params['Nbeta'] + j, :params['K']] = alpha
+            zs[i * params['Nbeta'] + j, params['K']:] = beta
 
-        # decode and classify batch of Nbeta samples with same alpha
-        xhat = decoder(torch.from_numpy(zs).float().to(device))
-        xhat = torch.sigmoid(xhat)
+    # decode and classify samples
+    xhat = decoder(torch.from_numpy(zs).float().to(device))
+    xhat = torch.sigmoid(xhat)
+    yhat = F.softmax(classifier(xhat), dim=1)
+    
+    yhats = torch.chunk(yhat, params['Nalpha'])
+    eps = 1e-8
+    I = 0.0
+    q = torch.zeros(params['M']).to(device)
+    
+    for i in range(0, params['Nalpha']):
+        p = 1./float(params['Nbeta']) * torch.sum(yhats[i], 0)  # estimate of p(y|alpha)
+        I += 1./float(params['Nalpha']) * torch.sum(torch.mul(p, torch.log(p+eps)))
+        q += 1./float(params['Nalpha']) * p  # estimate of p(y)
 
-        # yhat = classifier(xhat)[0]
-        yhat = F.softmax(classifier(xhat), dim=1)
-        p = 1./float(params['Nbeta']) * \
-            torch.sum(yhat, 0)  # estimate of p(y|alpha)
-        I = I + 1./float(params['Nalpha']) * \
-            torch.sum(torch.mul(p, torch.log(p+eps)))
-        q = q + 1./float(params['Nalpha']) * p  # accumulate estimate of p(y)
-
-    I = I - torch.sum(torch.mul(q, torch.log(q+eps)))
+    I -= torch.sum(torch.mul(q, torch.log(q+eps)))
 
     negCausalEffect = -I
     info = {"xhat": xhat, "yhat": yhat}
