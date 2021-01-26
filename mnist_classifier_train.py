@@ -4,7 +4,7 @@ from distutils.util import strtobool
 
 import torch
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
+from pytorch_lightning.callbacks import ModelCheckpoint
 import torch.utils.data as data
 
 from models.mnist_cnn import MNIST_CNN
@@ -51,7 +51,6 @@ def train(args):
                          gpus=1 if (torch.cuda.is_available() and
                                     args.gpu) else 0,
                          max_epochs=args.max_epochs,
-                         callbacks=[LearningRateMonitor("epoch")], # Log learning rate every epoch
                          progress_bar_refresh_rate=args.progress_bar)
 
     trainer.logger._default_hp_metric = None
