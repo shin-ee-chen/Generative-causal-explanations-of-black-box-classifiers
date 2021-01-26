@@ -189,7 +189,8 @@ class MNIST_CVAE(pl.LightningModule):
 
         elbo, L_rec, L_reg = ELBO(imgs, x_hat, mean, log_std)
 
-        C = self.information_flow()
+        if self.use_C: C = self.information_flow()
+        else: C = 0
 
         bpd = ELBO_to_BPD(elbo, imgs.size())
 
@@ -200,7 +201,7 @@ class MNIST_CVAE(pl.LightningModule):
         Computes approximate mutual information between the classifier and the designated causal variables.
 
         Returns:
-            C : the causal loss term, otherwise, mutual information: I(alpha; Y)
+            C : the causal loss term; mutual information I(alpha, Y)
         """
         C, debug = joint_uncond(*CVAE_to_params(self))
 
@@ -211,7 +212,6 @@ class MNIST_CVAE(pl.LightningModule):
         Is = np.zeros(ndims)
         for (i, dim) in enumerate(dims):
             negI, _ = joint_uncond_singledim(*CVAE_to_params(self), dim)
-            # print("look here!", C, negI)
             Is[i] = -1 * negI
         return Is
 
