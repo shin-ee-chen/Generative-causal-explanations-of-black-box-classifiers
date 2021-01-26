@@ -27,6 +27,7 @@ def train(args):
         args.log_dir +=  '_' + classes_str
     full_log_dir = os.path.join(CHECKPOINT_PATH, args.log_dir)
     os.makedirs(full_log_dir, exist_ok=True)
+    os.makedirs(os.path.join(full_log_dir, "lightning_logs"), exist_ok=True) # to fix "Missing logger folder"
 
     M = len(args.classes)
 
