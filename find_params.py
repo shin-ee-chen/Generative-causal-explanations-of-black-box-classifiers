@@ -4,6 +4,7 @@ from distutils.util import strtobool
 from matplotlib import pyplot as plt
 import os
 from math import floor, ceil, log10
+from utils.timing import Timer
 
 #import random # for debug
 
@@ -78,6 +79,8 @@ def find_params(args):
     Inputs:
         args - parse arguments containing other hyperparameters to use
     """
+    
+    timer = Timer()
     
     print("Parameters:\n" + ", ".join([k + " = " + str(vars(args)[k]) for k in vars(args)]))
     
@@ -187,6 +190,8 @@ def find_params(args):
     
     if args.K == 0 or args.L == 0:
         print("Could not find good configuration.")
+    
+    print(f"Total time: {timer.time()}")
     
     # Save results
     plot(Ls, LDs, Ks, Cs, lambs, lambDs, log_dir)

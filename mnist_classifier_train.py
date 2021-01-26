@@ -11,6 +11,7 @@ from models.mnist_cnn import MNIST_CNN
 from utils.reproducibility import set_seed, set_deteministic
 from datasets.mnist import MNIST_limited
 from datasets.fashion_mnist import Fashion_MNIST_limited
+from utils.timing import Timer
 
 CHECKPOINT_PATH =  './checkpoints'
 
@@ -60,7 +61,10 @@ def train(args):
 
     model = MNIST_CNN(model_param_set=args.clf_param_set, M=M,
                         lr=args.lr, momentum=args.momentum)
+    
+    timer = Timer()
     trainer.fit(model, train_loader, valid_loader)
+    print(f"Total training time: {timer.time()}")
 
     # Eval post training
     model = MNIST_CNN.load_from_checkpoint(

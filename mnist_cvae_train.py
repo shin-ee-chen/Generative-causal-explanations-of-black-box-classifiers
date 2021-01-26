@@ -17,6 +17,7 @@ from datasets.fashion_mnist import Fashion_MNIST_limited
 
 from utils.cvae_latent_visualization import CVAE_sweep
 from utils.reproducibility import set_seed, set_deteministic, load_latest
+from utils.timing import Timer
 
 CHECKPOINT_PATH = './checkpoints'
 
@@ -172,7 +173,10 @@ def train(args):
                       classifier_path=args.classifier_path,
                       use_C = args.use_C,
                       silent = args.silent)
+    
+    timer = Timer(args.silent)
     trainer.fit(model, train_loader, valid_loader)
+    if not args.silent: print(f"Total training time: {timer.time()}")
 
     # Eval post training
     model = MNIST_CVAE.load_from_checkpoint(
