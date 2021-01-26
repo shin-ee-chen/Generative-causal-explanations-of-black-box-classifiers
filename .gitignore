@@ -62,3 +62,4 @@ debug/
 *.job
 .gitignore
 
+.DS_Store
