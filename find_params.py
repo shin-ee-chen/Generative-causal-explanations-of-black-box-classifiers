@@ -19,9 +19,9 @@ def plot(Ls, LDs, Ks, Cs, lambs, lambDs, prefix):
     """
     
     # Create folder for results
-    log_dir = os.path.join("figures", "parameter_search")
-    os.makedirs(log_dir, exist_ok=True)
-    prefix = os.path.join(log_dir, prefix)
+    figure_dir = os.path.join("figures", "parameter_search")
+    os.makedirs(figure_dir, exist_ok=True)
+    prefix = os.path.join(figure_dir, prefix)
     
     # Plot D as a function of K+L
     plt.figure(figsize=(5,5))
@@ -62,6 +62,15 @@ def plot(Ls, LDs, Ks, Cs, lambs, lambDs, prefix):
 
 
 
+def train_model(args, use_C, log_dir):
+    args.use_C = use_C
+    if use_C: args.log_dir = os.path.join(log_dir, f"K={args.K}_L={args.L}_lambda={args.lamb}")
+    else: args.log_dir = os.path.join(log_dir, f"K={args.K}_L={args.L}_onlyD")
+    result, _ = mnist_cvae_train.train(args)
+    D = result[0]['Test ELBO']
+    C = result[0]['Test Information Flow']
+    return D, C
+
 def find_params(args):
     """
     Function to find optimal values for K, L and lambda based on Algorithm 1.
@@ -74,11 +83,12 @@ def find_params(args):
     
     print("\nFinding ideal number of latent dims...\n")
     
-    # Initialize arguments such that only D is optimized
     args.lamb = 1.0
-    args.use_C = False
     args.K = 0
     args.L = 0
+    class_str = ''.join(str(x) for x in sorted(args.classes))
+    log_dir = "parameter_search_" + class_str
+    args.add_classes_to_log_dir = False
     
     # Print info on first run to confirm correct model being loaded
     args.silent = False
@@ -91,8 +101,7 @@ def find_params(args):
     # Increase L until D stops improving
     while True:
         args.L += 1
-        result, _ = mnist_cvae_train.train(args)
-        D_current = result[0]['Test ELBO']
+        D_current, _ = train_model(args, False, log_dir)
         #D_current = random.randrange(100)
         print(f"K+L = {args.L}: D = {D_current:7.3f}")
         Ls.append(args.L)
@@ -111,8 +120,6 @@ def find_params(args):
     
     print("Finding ideal number of causal factors...\n")
     
-    # Now optimize D and C
-    args.use_C = True
     C_best = float('-inf')
     lambda_best = None
     Ks = []
@@ -136,11 +143,7 @@ def find_params(args):
         while lp <= 0:
             lp += args.lambda_exp_step
             args.lamb = pow(10, lp)
-            result, _ = mnist_cvae_train.train(args)
-            D_current = result[0]['Test ELBO']
-            C_new = result[0]['Test Information Flow']
-            #D_current = random.randrange(100)
-            #C_new = random.uniform(-1, 0)
+            D_current, C_new = train_model(args, True, log_dir)
             print(f"lambda = {args.lamb:7.5f}: D = {D_current:7.3f}, C = {C_new:6.3f}")
             lambs_current.append(args.lamb)
             lambDs_current.append(D_current)
@@ -186,8 +189,7 @@ def find_params(args):
         print("Could not find good configuration.")
     
     # Save results
-    class_str = ''.join(str(x) for x in sorted(args.classes))
-    plot(Ls, LDs, Ks, Cs, lambs, lambDs, class_str)
+    plot(Ls, LDs, Ks, Cs, lambs, lambDs, log_dir)
 
 
 

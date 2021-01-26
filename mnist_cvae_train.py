@@ -22,7 +22,7 @@ CHECKPOINT_PATH = './checkpoints'
 
 class GenerateCallback(pl.Callback):
 
-    def __init__(self, batch_size, every_n_epochs, save_to_disk, valid_data=None):
+    def __init__(self, batch_size, every_n_epochs, save_to_disk, save_dir, valid_data=None):
         """
         Inputs:
             batch_size - Number of images to generate
@@ -33,6 +33,7 @@ class GenerateCallback(pl.Callback):
         self.batch_size = batch_size
         self.every_n_epochs = every_n_epochs
         self.save_to_disk = save_to_disk
+        self.save_dir = save_dir
 
         self.valid_data = valid_data
 
@@ -41,7 +42,7 @@ class GenerateCallback(pl.Callback):
         This function is called after finishing training.
         """
         if self.every_n_epochs == -1:
-            self.sweep_and_save(trainer, pl_module, save_loc=trainer.logger._version)
+            self.sweep_and_save(trainer, pl_module, save_loc=self.save_dir)
 
     def on_epoch_end(self, trainer, pl_module):
         """
@@ -54,7 +55,7 @@ class GenerateCallback(pl.Callback):
             trainer.current_epoch == 0 or
                 (trainer.current_epoch + 1) == trainer.max_epochs):
             #self.sample_and_save(trainer, pl_module, trainer.current_epoch+1)
-            self.sweep_and_save(trainer, pl_module, save_loc=f"{trainer.logger._version}_{trainer.current_epoch}")
+            self.sweep_and_save(trainer, pl_module, save_loc=os.path.join(self.save_dir, trainer.current_epoch))
             
         torch.cuda.empty_cache()
 
@@ -72,7 +73,7 @@ class GenerateCallback(pl.Callback):
         imgs, _ = pl_module.sample(64)
 
         if self.save_to_disk:
-            save_image(imgs, trainer.logger.log_dir + '/epoch{:d}.png'.format(epoch),
+            save_image(imgs, os.path.join(self.save_dir, '/epoch{:d}.png'.format(epoch)),
                        nrow=8)
 
         img_grid = make_grid(imgs, nrow=8)
@@ -109,7 +110,7 @@ def train(args):
         args - Namespace object from the argument parser
     """
 
-    if args.add_classes_to_cpt_path == True:
+    if args.add_classes_to_log_dir == True:
         classes_str = ''.join(str(x) for x in sorted(args.classes))
         full_log_dir = os.path.join(CHECKPOINT_PATH, args.log_dir + '_' + classes_str)
     else:
@@ -139,7 +140,7 @@ def train(args):
         import logging
         logging.getLogger('lightning').setLevel(logging.WARNING)
     else:
-        callbacks = [GenerateCallback(batch_size=8, save_to_disk=True, every_n_epochs=args.sample_every, valid_data=valid_set)]
+        callbacks = [GenerateCallback(batch_size=8, save_to_disk=True, save_dir = args.log_dir, every_n_epochs=args.sample_every, valid_data=valid_set)]
     
     set_deteministic()
 
@@ -180,9 +181,9 @@ def train(args):
     test_result = trainer.test(
         model, test_dataloaders=test_loader, verbose=not args.silent)
     
-    gce_path = './pretrained_models/'+ args.log_dir
+    gce_path = os.path.join('pretrained_models', args.log_dir)
     if not os.path.exists(gce_path):
-        os.mkdir(gce_path)
+        os.makedirs(gce_path, exist_ok=True)
 
     torch.save(model, os.path.join(gce_path,'cvae_model.pt'))
     
@@ -242,8 +243,8 @@ if __name__ == '__main__':
     parser.add_argument('--log_dir', default='mnist_cvae', type=str,
                         help='Directory where the PyTorch Lightning logs should be created. Automatically adds \
                             the classes to directory. If not needed, turn off using add_classes_to_cpt_path flag.')
-    parser.add_argument('--add_classes_to_cpt_path', default=True, type=lambda x: bool(strtobool(x)),
-                        help='Whether to add the classes to cpt directory.')
+    parser.add_argument('--add_classes_to_log_dir', default=True, type=lambda x: bool(strtobool(x)),
+                        help='Whether to add the classes to log directory name.')
     parser.add_argument('--silent', default=False, type=lambda x: bool(strtobool(x)),
                         help='Perform training without printing to console or creating graphs.')
     parser.add_argument('--datasets', default='traditional',choices=['traditional', 'fashion'],
