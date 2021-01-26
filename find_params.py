@@ -79,6 +79,11 @@ def find_params(args):
     args.use_C = False
     args.K = 0
     args.L = 0
+    
+    # Print info on first run to confirm correct model being loaded
+    args.silent = False
+    args.progress_bar = False
+    
     D_best = float('inf')
     Ls = []
     LDs = []
@@ -102,6 +107,7 @@ def find_params(args):
         
         # D has improved, so continue
         D_best = D_current
+        args.silent = True
     
     print("Finding ideal number of causal factors...\n")
     
