@@ -38,11 +38,11 @@ def train(args):
         test_set = Fashion_MNIST_limited(train=False, classes=args.classes)
 
     train_loader = data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True,
-                                   drop_last=True, pin_memory=True, num_workers=0)
+                                   drop_last=True, pin_memory=True, num_workers=args.num_workers)
     valid_loader = data.DataLoader(valid_set, batch_size=args.batch_size, shuffle=False,
-                                   drop_last=True, pin_memory=True, num_workers=0)
+                                   drop_last=True, pin_memory=True, num_workers=args.num_workers)
     test_loader = data.DataLoader(test_set, batch_size=args.batch_size, shuffle=False,
-                                  drop_last=True, pin_memory=True, num_workers=0)
+                                  drop_last=True, pin_memory=True, num_workers=args.num_workers)
 
     # Create a PyTorch Lightning trainer with the generation callback
     trainer = pl.Trainer(default_root_dir=full_log_dir,
