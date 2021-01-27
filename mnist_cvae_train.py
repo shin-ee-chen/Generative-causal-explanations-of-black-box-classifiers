@@ -145,7 +145,7 @@ def train(args):
     
     set_deteministic()
 
-    set_seed(42)
+    set_seed(args.seed)
 
     trainer = pl.Trainer(default_root_dir=full_log_dir,
                          checkpoint_callback=ModelCheckpoint(
