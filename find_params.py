@@ -153,7 +153,7 @@ def find_params(args):
             dist_new = abs(D_current - D_best)
             
             # Stop if D is close enough to target D
-            if dist_new < D_best * args.epsilon:
+            if dist_new < D_best * args.xi:
                 # In this case, use current values of lambda and C
                 C_current = C_new
                 print(f"Using K = {args.K}, L = {args.L}, lambda = {args.lamb:.5f}, C = {C_current:.3f}.\n")
@@ -203,7 +203,7 @@ if __name__ == '__main__':
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     # Search parameters
-    parser.add_argument('--epsilon', default=0.05, type=float,
+    parser.add_argument('--xi', default=0.05, type=float,
                         help='Leeway factor to decide when D is close enough to original D')
     parser.add_argument('--lambda_exp_0', default=-3, type=float,
                         help='Initial exponent for lambda factor. First lambda value will be 10^(lambda_exp_0)')
