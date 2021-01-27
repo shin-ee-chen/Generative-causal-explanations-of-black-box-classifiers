@@ -185,7 +185,7 @@ def train(args):
     test_result = trainer.test(
         model, test_dataloaders=test_loader, verbose=not args.silent)
     
-    gce_path = os.path.join('pretrained_models', args.log_dir+ '_' + classes_str)
+    gce_path = os.path.join('pretrained_models', args.log_dir)
     if not os.path.exists(gce_path):
         os.makedirs(gce_path, exist_ok=True)
 
