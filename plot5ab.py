@@ -30,13 +30,19 @@ def train(args):
     classifier = MNIST_CNN(model_param_set=args.clf_param_set, M=M,
                         lr=args.lr, momentum=args.momentum)
 
-    classifier_path = './pretrained_models/mnist_cnn/'
+    model_name = "mnist_cnn"
+    gce_name = "mnist_gce"
+    if args.add_classes_to_cpt_path:
+        classes_str = ''.join(str(x) for x in sorted(args.classes))
+        model_name += '_' + classes_str
+        gce_name += '_' + classes_str
+    classifier_path = os.path.join("pretrained_models", model_name)
     checkpoint_model = torch.load(os.path.join(classifier_path,'model.pt'), map_location=device)
     classifier.load_state_dict(checkpoint_model['model_state_dict_classifier'])
 
     # load GCE
-    gce_path = './pretrained_models/mnist_cvae/'
-    gce = torch.load(os.path.join(gce_path,'model.pt'), map_location=device)
+    gce_path = os.path.join("pretrained_models", gce_name)
+    gce = torch.load(os.path.join(gce_path,'gce_model.pt'), map_location=device)
 
     # plot information_flow
     z_dim = args.K + args.L
@@ -146,7 +152,7 @@ if __name__ == '__main__':
     # Model hyperparameters
     parser.add_argument('--clf_param_set', default='OShaugnessy',
                         type=str, help='The black-box classifier we wish to explain.')
-    parser.add_argument('--classes', default=[1, 4, 9],
+    parser.add_argument('--classes', default=[3, 8],
                         type=int, nargs='+',
                         help='The classes permittible for classification')
     # Loss and optimizer hyperparameters
@@ -188,7 +194,7 @@ if __name__ == '__main__':
                        help='Dimensionality of causal latent space')
     parser.add_argument('--L', default=2, type=int,
                        help='Dimensionality of non-causal latent space')
-    parser.add_argument('--M', default=3, type=int,
+    parser.add_argument('--M', default=2, type=int,
                        help='Dimensionality of classifier output')
 
     args = parser.parse_args()
