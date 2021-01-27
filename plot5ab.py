@@ -24,7 +24,6 @@ def train(args):
     Inputs:
         args - Namespace object from the argparser
     """
-    print("hi let us start!")
     M = len(args.classes)
 
     # load classifier
@@ -47,7 +46,6 @@ def train(args):
 
 
 
-    print("hi there!", info_flow)
     cols = {'golden_poppy' : [1.000,0.761,0.039],
         'bright_navy_blue' : [0.047,0.482,0.863],
         'rosso_corsa' : [0.816,0.000,0.000]}
@@ -62,7 +60,6 @@ def train(args):
     plt.title('Information flow of individual causal factors')
     plt.savefig('./figures/Figure5ab/fig5a.svg')
     plt.savefig('./figures/Figure5ab/fig5a.png')
-    print("done 5a")
 
     # --- load test data ---
     train_set, valid_set = MNIST_limited(train=True, classes=args.classes)
