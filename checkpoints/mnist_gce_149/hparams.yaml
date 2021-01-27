@@ -1,0 +1,18 @@
+K: 2
+L: 2
+M: 3
+Nalpha: 75
+Nbeta: 25
+betas:
+- 0.5
+- 0.99
+classes:
+- 1
+- 4
+- 9
+classifier_path: null
+lamb: 0.1
+lr: 0.0005
+num_filters: 64
+silent: false
+use_C: true
