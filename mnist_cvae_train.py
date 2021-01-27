@@ -186,11 +186,11 @@ def train(args):
     test_result = trainer.test(
         model, test_dataloaders=test_loader, verbose=not args.silent)
     
-    gce_path = os.path.join('pretrained_models', args.log_dir)
+    gce_path = os.path.join('pretrained_models', args.log_dir+ '_' + classes_str)
     if not os.path.exists(gce_path):
         os.makedirs(gce_path, exist_ok=True)
 
-    torch.save(model, os.path.join(gce_path,'cvae_model.pt'))
+    torch.save(model, os.path.join(gce_path,'gce_model.pt'))
     
     return test_result, trainer
 
@@ -245,7 +245,7 @@ if __name__ == '__main__':
                               'Not to be used in conjuction with SLURM jobs'))
     parser.add_argument('--sample_every', default=-1, type=int,
                         help='When to sample the latent space. If -1, only samples at end of training.')
-    parser.add_argument('--log_dir', default='mnist_cvae', type=str,
+    parser.add_argument('--log_dir', default='mnist_gce', type=str,
                         help='Directory where the PyTorch Lightning logs should be created. Automatically adds \
                             the classes to directory. If not needed, turn off using add_classes_to_cpt_path flag.')
     parser.add_argument('--add_classes_to_log_dir', default=True, type=lambda x: bool(strtobool(x)),
