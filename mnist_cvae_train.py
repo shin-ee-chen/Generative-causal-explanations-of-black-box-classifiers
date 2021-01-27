@@ -213,17 +213,17 @@ if __name__ == '__main__':
                                 adhered to')
     parser.add_argument('--num_filters', default=64, type=int,
                         help='Number of filters used in the encoders/decoders')
-    parser.add_argument('--K', default=2, type=int,
+    parser.add_argument('--K', default=1, type=int,
                         help='Dimensionality of causal latent space')
-    parser.add_argument('--L', default=6, type=int,
+    parser.add_argument('--L', default=7, type=int,
                         help='Dimensionality of non-causal latent space')
-    parser.add_argument('--lamb', default=0.1, type=float,
+    parser.add_argument('--lamb', default=0.05, type=float,
                         help='VAE-loss coefficient')
     parser.add_argument('--use_C', default=True, type=lambda x: bool(strtobool(x)),
                         help='Whether or not the causal influence term should be optimized along with the VAE loss.')
 
     # Loss and optimizer hyperparameters
-    parser.add_argument('--max_steps', default=500, type=int,
+    parser.add_argument('--max_steps', default=8000, type=int,
                         help='Max number of training batches')
     parser.add_argument('--lr', default=5e-4, type=float,
                         help='Learning rate to use')
