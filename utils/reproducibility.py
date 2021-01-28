@@ -76,7 +76,7 @@ def load_latest(trainer, save_name, inference=False, map_location=None, silent =
         model = trainer.load_from_checkpoint(
             pretrained_filename, map_location=map_location)
     else:
-        sys.exit("No classifier model found")
+        sys.exit(f"{save_name} model not found.")
 
     if inference:
         model.eval()
