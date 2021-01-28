@@ -208,9 +208,8 @@ if __name__ == '__main__':
                         type=int, nargs='+',
                         help='The classes permittible for classification')
     parser.add_argument('--classifier_path', type=str,
-                        help='This is the directory INSIDE of models where pre-trained \
-                            black-box classifier is. Necessary if naming convention is not \
-                                adhered to')
+                        help='This is the directory INSIDE the checkpoints folder where the pre-trained \
+                            black-box classifier is. Necessary if naming convention is not adhered to')
     parser.add_argument('--num_filters', default=64, type=int,
                         help='Number of filters used in the encoders/decoders')
     parser.add_argument('--K', default=2, type=int,
