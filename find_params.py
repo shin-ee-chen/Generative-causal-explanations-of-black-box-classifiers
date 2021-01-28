@@ -6,8 +6,6 @@ import os
 from math import floor, ceil, log10
 from utils.timing import Timer
 
-#import random # for debug
-
 def plot(Ls, LDs, Ks, Cs, lambs, lambDs, prefix):
     """
     Helper function to produce plots from results of the hyperparameter search.
@@ -105,7 +103,6 @@ def find_params(args):
     while True:
         args.L += 1
         D_current, _ = train_model(args, False, log_dir)
-        #D_current = random.randrange(100)
         print(f"K+L = {args.L}: D = {D_current:7.3f}")
         Ls.append(args.L)
         LDs.append(D_current)
