@@ -142,7 +142,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
         os.makedirs(fig_dir, exist_ok=True)
         plt.savefig(fname=os.path.join(fig_dir, 'z_{:d}_zoomed.pdf'.format(zi) if zoomed else 'z_{:d}.pdf'.format(zi)))
 
-        plt.show()
+        plt.close()
 
     ########################################################################
     ### Plot sweep over all latents for single image #######################
@@ -228,7 +228,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
         os.makedirs(fig_dir, exist_ok=True)
         plt.savefig(fname=os.path.join(fig_dir, 'class_{:d}_sweep.pdf'.format(class_int)))
 
-        plt.show()
+        plt.close()
 
     ########################################################################
     ### Ablation study plots ###############################################
@@ -257,7 +257,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
         os.makedirs(fig_dir, exist_ok=True)
         plt.savefig(fname=os.path.join(fig_dir, 'InformationFlow.pdf'))
 
-        plt.show()
+        plt.close()
 
     def ablation_accuracy():
 
@@ -319,7 +319,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
         os.makedirs(fig_dir, exist_ok=True)
         plt.savefig(fname=os.path.join(fig_dir, 'AblationAccuracy.pdf'))
 
-        plt.show()
+        plt.close()
 
 
     ########################################################################
