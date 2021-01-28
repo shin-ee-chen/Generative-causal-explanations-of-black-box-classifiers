@@ -55,7 +55,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
 
     x, y = next(loader)
 
-    gce_name = dataset_name.lower() + '_' + 'cvae' + '_' + classes_str
+    gce_name = dataset_name.lower() + '_' + 'gce' + '_' + classes_str
     gce = load_latest(trainer=GCEs[implementation.upper()],
                     save_name=gce_name,
                     map_location=torch.device('cpu'),
