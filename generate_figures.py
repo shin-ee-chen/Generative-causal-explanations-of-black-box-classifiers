@@ -109,7 +109,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
         for n_row, row in enumerate(imgs):
             for n_col, img in enumerate(row):
 
-                grid[i].imshow(img, cmap='binary', vmin=0, vmax=1)
+                grid[i].imshow(img.squeeze(), cmap='binary', vmin=0, vmax=1)
 
                 grid[i].tick_params(axis='both', which='both',
                             bottom=False, top=False, left=False, right=False,
@@ -156,7 +156,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
 
         fig, axes = plt.subplots(2, 1, figsize=(PAGE_WIDTH / 4, PAGE_WIDTH / 3))
 
-        axes[0].imshow(x_select[internal_class].permute(1, 2, 0), cmap='binary')
+        axes[0].imshow(x_select[internal_class].permute(1, 2, 0).squeeze(), cmap='binary')
 
         vals = np.linspace(-3, 3, num=cols)
 
@@ -186,7 +186,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
         for n_row, row in enumerate(imgs):
             for n_col, img in enumerate(row):
 
-                grid[i].imshow(img, cmap='binary', vmin=0, vmax=1)
+                grid[i].imshow(img.squeeze(), cmap='binary', vmin=0, vmax=1)
 
                 for axis in ['top', 'bottom', 'left', 'right']:
                     grid[i].spines[axis].set_linewidth(2.5)
