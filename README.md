@@ -121,10 +121,3 @@ python mnist_cvae_train.py --classes 0 3 4  --max_steps 8000 \
 --dataset fashion --log_dir fmnist_gce --classifier_path fmnist_cnn_034
  ```
 
-# Results
-For images visualising CVAE's latent space, see the figures directory. Images generated during training are stored as, Model>Epoch>Variable.
-
-# Errors in implementation
-Some differences/errors in suggested implementation found in the paper vs. the actual existing Github repository.
-    * Paper suggested that ADAM was used for classifier optimizer, actual code used SGD with momentum
-        * Also uses learning rate scheduler, although parser is missing gamma coefficient for decay
