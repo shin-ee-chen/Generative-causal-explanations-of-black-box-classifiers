@@ -3,8 +3,6 @@
 - [Students](#students)
 - [Requirements](#requirements)
 - [How to start](#how-to-start)
-- [Results](#results)
-- [Errors in implementation](#errors-in-implementation)
 
 # UvA_FACT_2021
 Assignment for Fairness, Accountability, Confidentiality and Transparency in AI-University of Amsterdam
