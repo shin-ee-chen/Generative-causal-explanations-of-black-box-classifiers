@@ -4,10 +4,8 @@ import argparse
 import torch
 import torch.utils.data as data
 
-from models.mnist_cnn import MNIST_CNN
 from datasets.fashion_mnist import Fashion_MNIST_limited
 from mnist_cvae_train import GenerateCallback
-from models.cvae import MNIST_CVAE
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 import matplotlib.pyplot as plt
@@ -21,11 +19,10 @@ def train(args):
         args - Namespace object from the argparser
     """
     print("Hi let us start to the information flow and accuracies for ablation study!")
-    M = len(args.classes)
+    M = 3
 
     # load classifier
-    classifier = MNIST_CNN(model_param_set=args.clf_param_set, M=M,
-                        lr=args.lr, momentum=args.momentum)
+    classifier = MNIST_CNN(model_param_set='OShaugnessy', M=M, lr=5e-4, momentum=0.9)
 
     classifier_path = './pretrained_models/fmnist_cnn_034/'
     checkpoint_model = torch.load(os.path.join(classifier_path,'model.pt'), map_location=device)
@@ -38,7 +35,9 @@ def train(args):
     print("pretrained model loaded!")
 
     # plot information_flow
-    z_dim = args.K + args.L
+    K = 2
+    L = 4
+    z_dim = K + L
     info_flow = gce.information_flow_single(range(0,z_dim))
 
     # we use author's code for making the exact same plot
@@ -59,15 +58,10 @@ def train(args):
     print("done 5a")
 
     # --- load test data ---
-    train_set, valid_set = Fashion_MNIST_limited(train=True, classes=args.classes)
-    # test_set = Fashion_MNIST_limited(train=False, classes=args.classes)
+    train_set, valid_set = Fashion_MNIST_limited(train=True, classes=[0,3,4]])
     valid_loader = data.DataLoader(valid_set, batch_size=1, shuffle=False,
                                   drop_last=True, pin_memory=True, num_workers=0)
 
-
-    # train_set, valid_set = MNIST_limited(train=True, classes=args.classes)
-    # valid_loader = data.DataLoader(valid_set, batch_size=1, shuffle=False,
-    #                                drop_last=True, pin_memory=True, num_workers=0)
     X = train_set.data
     Y = train_set.targets
     vaX = valid_set.dataset.data
