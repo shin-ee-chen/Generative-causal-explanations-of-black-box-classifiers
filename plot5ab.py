@@ -31,12 +31,12 @@ def train(args):
     classifier = MNIST_CNN(model_param_set=args.clf_param_set, M=M,
                         lr=args.lr, momentum=args.momentum)
 
-    classifier_path = './pretrained_models/mnist_cnn_149/'
+    classifier_path = './pretrained_models/fmnist_cnn_034/'
     checkpoint_model = torch.load(os.path.join(classifier_path,'model.pt'), map_location=device)
     classifier.load_state_dict(checkpoint_model['model_state_dict_classifier'])
 
     # load GCE
-    gce_path = './pretrained_models/mnist_gce_149/'
+    gce_path = './pretrained_models/fmnist_gce_034/'
     gce = torch.load(os.path.join(gce_path,'gce_model.pt'), map_location=device)
 
     # plot information_flow
