@@ -4,7 +4,6 @@
 - [Requirements](#requirements)
 - [How to start](#how-to-start)
 - [Results](#results)
-- [Errors in implementation](#errors-in-implementation)
 
 # UvA_FACT_2021
 Assignment for Fairness, Accountability, Confidentiality and Transparency in AI-University of Amsterdam
@@ -20,6 +19,8 @@ UvA_FACT_2021
 │   ├── raw data sets in named directories
 │   ├── mnist.py
 │   └──     file that contains code process MNIST, limiting it to specified classes only
+│   ├── fashion_mnist.py
+│   └──     file that contains code process FMNIST, limiting it to specified classes only
 ├── figures
 │   │     all figures produced during training, or otherwise relevant to the project Maybe should be placed in root directory
 │   └──   PyTorch (Lightning) code for creating all training all models described 
@@ -28,6 +29,8 @@ UvA_FACT_2021
 │   │       models for classifying the limitied MNIST datasets
 │   ├── mnist_cvae.py
 │   └──     cvae for explaining the limitied MNIST classifier  
+├── pretrained_models
+│   ├── all the pretrained models are here
 ├── utils
 │   ├── cvae_latent_visualization.py
 │   │       module for generating latent variable sweeps for a cvae
@@ -37,8 +40,20 @@ UvA_FACT_2021
 │   │       module with some methods for reproducibility, including universal seed setting, model loading, etc.
 │   ├── vae_loss.py
 │   └──     module for computing variational loss (ELBO, KLD, BPD)
-├── experiments
-│   └── will contain all code for experimentation using pretrained models
+│   ├── timing.py
+│   └──     module for computing the time required for runnign the experiments
+├── generate_figures.py
+│   └── one script to get all the results.
+├── environment_Lisa.yml
+│   └── environment file for training on gpu.
+├── environment.yml
+│   └── environment file for training locally.
+├── find_params.py
+│   └── Algorithm I (in the paper) implementation.
+├── mnist_classifier_train.py
+│   └── file for training the classifier (for both mnist and fmnist).
+├── mnist_cvae_train.py
+│   └── file for training the gce (for both mnist and fmnist).
 ```
 
 # Students
@@ -52,8 +67,9 @@ Ivo Verhoeven
 
 # Requirements
 ## Environment
-We provide a conda environment called FACT which contains all packages you might need for running the repo. For your own computer, the environment.yml suggests the local packages required. As we do not have local computer with GPU to train all the models, rather we use Lisa environment provided by the deep learning course with environment_Lisa.yml which installs the environment FACT with CUDA 10.1 support. 
+We provide a conda environment called FACT which contains all packages you might need for running the repo. For your own computer, the environment.yml suggests the local packages required. As we do not have local computer with GPU to train all the models, rather we use Lisa environment with GPU provided by the deep learning course at UvA with environment_Lisa.yml which installs the environment dl2020 with CUDA 10.1 support. 
 
+Running on gpu (note all the models are trained on gpu, so you will get error if you try to load the pretrained models on cpu):
 - add the following lines in your ".bashrc":
 ```
 module load 2019
@@ -71,8 +87,11 @@ Follow the detailed description [here](https://github.com/uvadlc/uvadlc_practica
 
 # How to start
 ### Running one script to get results
-We provide a jupyter notebook (.ipynb) for displaying all the results. In case you want to run different parts separately, you can always check the following commands:
-
+We provide one single python file for displaying all the results (including figure 5ab in the original paper for information flow and comparison of accuracies). Run the following command to get all the reproduced figures/results: 
+```
+python generate_figures.py
+```
+For training the classifier and gce, you need the following code and it will save the models into pretrained_models:
 ### Train on 1/4/9 MNIST dataset:
 1. To train CNN classifier:
 ```
@@ -101,19 +120,5 @@ python mnist_cvae_train.py --classes 0 3 4  --max_steps 8000 \
 --dataset fashion --log_dir fmnist_gce --classifier_path fmnist_cnn_034
  ```
 
-### Figure 5(ab) for information flow and removing aspects
-For getting Figure 5(ab) in the original pape, please run the following command:
-```
-python ablation_study.py
-```
-The produced figures would be in the directory figures/ablation_study/information_flow.png and figures/ablation_study/accuracy_comparison.png
-
-
-
 # Results
-For images visualising CVAE's latent space, see the figures directory. Images generated during training are stored as, Model>Epoch>Variable.
-
-# Errors in implementation
-Some differences/errors in suggested implementation found in the paper vs. the actual existing Github repository.
-    * Paper suggested that ADAM was used for classifier optimizer, actual code used SGD with momentum
-        * Also uses learning rate scheduler, although parser is missing gamma coefficient for decay
+All the results are saved in ./figures directory.
