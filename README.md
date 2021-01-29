@@ -54,6 +54,13 @@ Ivo Verhoeven
 ## Environment
 We provide a conda environment called FACT which contains all packages you might need for running the repo. For your own computer, the environment.yml suggests the local packages required. As we do not have local computer with GPU to train all the models, rather we use Lisa environment provided by the deep learning course with environment_Lisa.yml which installs the environment FACT with CUDA 10.1 support. 
 
+Running Locally:
+```
+conda env create -f environment.yml
+source activate FACT
+```
+
+Running on Lisa cluster (gpu):
 - add the following lines in your ".bashrc":
 ```
 module load 2019
