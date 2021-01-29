@@ -394,3 +394,4 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
 
 generate_figures(implementation='mnist_149')
 generate_figures(implementation='mnist_38')
+generate_figures(implementation='fmnist_034')
