@@ -3,6 +3,7 @@
 - [Students](#students)
 - [Requirements](#requirements)
 - [How to start](#how-to-start)
+- [Results](#results)
 
 # UvA_FACT_2021
 Assignment for Fairness, Accountability, Confidentiality and Transparency in AI-University of Amsterdam
@@ -119,3 +120,5 @@ python mnist_cvae_train.py --classes 0 3 4  --max_steps 8000 \
 --dataset fashion --log_dir fmnist_gce --classifier_path fmnist_cnn_034
  ```
 
+# Results
+All the results are saved in ./figures directory.
