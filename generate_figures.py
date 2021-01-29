@@ -238,7 +238,8 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
 
     def information_flows():
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        if device == 'cuda':  ## because the model is trained on gpu
+        if torch.cuda.is_available() and implementation == 'fmnist_034':  ## because the model is trained on gpu
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
             # information flow ablation study for fmnist data (figure 5a in the paper)
             M = 3
             K = 2
@@ -276,7 +277,8 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
 
     def ablation_accuracy():
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        if device == 'cuda':  ## because the model is trained on gpu
+        if torch.cuda.is_available() and implementation == 'fmnist_034':  ## because the model is trained on gpu
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
             # accuracy comparison ablation study for fmnist data (figure 5b in the paper)
             # load GCE
             gce_path = './pretrained_models/fmnist_gce_034/'
@@ -290,7 +292,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
             print("classifier pretrained model loaded!")
 
             # --- load test data ---
-            train_set, valid_set = Fashion_MNIST_limited(train=True, classes=[0,3,4]])
+            train_set, valid_set = Fashion_MNIST_limited(train=True, classes=[0,3,4])
             valid_loader = data.DataLoader(valid_set, batch_size=1, shuffle=False,
                                         drop_last=True, pin_memory=True, num_workers=0)
 
