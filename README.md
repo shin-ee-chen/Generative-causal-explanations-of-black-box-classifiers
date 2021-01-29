@@ -78,11 +78,11 @@ Follow the detailed description [here](https://github.com/uvadlc/uvadlc_practica
 
 # How to start
 ### Running one script to get results
-We provide one single python file for displaying all the results (for convenience). Run the following command to get all the reproduced figures/results: 
+We provide one single python file for displaying all the results (including figure 5ab in the original paper for information flow and comparison of accuracies). Run the following command to get all the reproduced figures/results: 
 ```
 python generate_figures.py
 ```
-In case you want to run different parts separately, you can always check the following commands:
+For training the classifier and gce, you need the following code and it will save the models into pretrained_models:
 ### Train on 1/4/9 MNIST dataset:
 1. To train CNN classifier:
 ```
@@ -110,15 +110,6 @@ python mnist_cvae_train.py --classes 0 3 4  --max_steps 8000 \
 --batch_size 32 --lr 1e-4 --Nalpha 100 --Nbeta 25 --K 2 --L 4 --lamb 0.05 \
 --dataset fashion --log_dir fmnist_gce --classifier_path fmnist_cnn_034
  ```
-
-### Figure 5(ab) for information flow and removing aspects
-For getting Figure 5(ab) in the original pape, please run the following command:
-```
-python ablation_study.py
-```
-The produced figures would be in the directory figures/ablation_study/information_flow.png and figures/ablation_study/accuracy_comparison.png
-
-
 
 # Results
 For images visualising CVAE's latent space, see the figures directory. Images generated during training are stored as, Model>Epoch>Variable.
