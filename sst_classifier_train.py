@@ -1,4 +1,5 @@
 import os
+import time
 import argparse
 
 import torch
@@ -70,7 +71,11 @@ def train(args):
                            lr_decay=args.lr_decay)
 
     # Fit
+    t0 = time.time()
     trainer.fit(model, train_loader, valid_loader)
+    t1 = time.time()
+
+    print('Training duration:', t1-t0)
 
     # Eval post training
     model = sst_bilstm_cnn.load_from_checkpoint(trainer.checkpoint_callback.best_model_path)

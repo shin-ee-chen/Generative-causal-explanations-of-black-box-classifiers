@@ -34,6 +34,7 @@ class lm_gce(pl.LightningModule):
         self.betas = betas
         self.lr = lr
 
+
     def forward(self, batch):
 
         L_rec, L_reg = self.vae.forward(batch)
@@ -67,6 +68,7 @@ class lm_gce(pl.LightningModule):
             classifier = self.classifier
 
             return params, decoder, classifier, self.device
+
 
         C, debug = joint_uncond(*_lm_gce_to_params(self))
 
