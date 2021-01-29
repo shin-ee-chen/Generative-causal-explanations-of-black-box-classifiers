@@ -84,6 +84,20 @@ We provide one single python file for displaying all the results (including figu
 python generate_figures.py
 ```
 For training the classifier and gce, you need the following code and it will save the models into pretrained_models:
+### Train on 3/8 MNIST dataset:
+1. To train CNN classifier:
+```
+python mnist_classifier_train.py --classes 3 8 --max_epochs 20 \
+--datasets traditional
+ ```
+
+2. To train VAE and generate Figure 13:
+```
+python mnist_cvae_train.py --classes 3 8  --max_steps 8000 \
+--batch_size 64 --lr 5e-4 --Nalpha 100 --Nbeta 25 --K 1 --L 7 --lamb 0.05 \
+--dataset traditional
+ ```
+
 ### Train on 1/4/9 MNIST dataset:
 1. To train CNN classifier:
 ```
