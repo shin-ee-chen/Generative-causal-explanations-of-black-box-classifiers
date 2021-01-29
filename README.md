@@ -70,6 +70,9 @@ source activate dl2020
 Follow the detailed description [here](https://github.com/uvadlc/uvadlc_practicals_2020/blob/master/assignment_1/1_mlp_cnn/README.md).
 
 # How to start
+### Running one script to get results
+We provide a jupyter notebook (.ipynb) for displaying all the results. In case you want to run different parts separately, you can always check the following commands:
+
 ### Train on 1/4/9 MNIST dataset:
 1. To train CNN classifier:
 ```
