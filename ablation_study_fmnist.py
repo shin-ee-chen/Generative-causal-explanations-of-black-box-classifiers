@@ -5,8 +5,7 @@ import torch
 import torch.utils.data as data
 
 from models.mnist_cnn import MNIST_CNN
-from datasets.mnist import MNIST_limited
-
+from datasets.fashion_mnist import Fashion_MNIST_limited
 from mnist_cvae_train import GenerateCallback
 from models.cvae import MNIST_CVAE
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -60,14 +59,19 @@ def train(args):
     print("done 5a")
 
     # --- load test data ---
-    train_set, valid_set = MNIST_limited(train=True, classes=args.classes)
-
+    train_set, valid_set = Fashion_MNIST_limited(train=True, classes=args.classes)
+    # test_set = Fashion_MNIST_limited(train=False, classes=args.classes)
     valid_loader = data.DataLoader(valid_set, batch_size=1, shuffle=False,
-                                   drop_last=True, pin_memory=True, num_workers=0)
+                                  drop_last=True, pin_memory=True, num_workers=0)
+
+
+    # train_set, valid_set = MNIST_limited(train=True, classes=args.classes)
+    # valid_loader = data.DataLoader(valid_set, batch_size=1, shuffle=False,
+    #                                drop_last=True, pin_memory=True, num_workers=0)
     X = train_set.data
     Y = train_set.targets
-    vaX = valid_set.data
-    vaY = valid_set.targets
+    vaX = valid_set.dataset.data
+    vaY = valid_set.dataset.targets
 
     ntrain, nrow, ncol = X.shape
     x_dim = nrow*ncol
