@@ -43,11 +43,6 @@ def train(args):
     z_dim = args.K + args.L
     info_flow = gce.information_flow_single(range(0,z_dim))
 
-
-
-
-
-    print("hi there!", info_flow)
     cols = {'golden_poppy' : [1.000,0.761,0.039],
         'bright_navy_blue' : [0.047,0.482,0.863],
         'rosso_corsa' : [0.816,0.000,0.000]}
@@ -73,7 +68,6 @@ def train(args):
     Y = train_set.targets
     vaX = valid_set.data
     vaY = valid_set.targets
-    # print("this is for debug1:", vaX[None, 0:1,:,:].shape)
 
     ntrain, nrow, ncol = X.shape
     x_dim = nrow*ncol
@@ -89,10 +83,7 @@ def train(args):
             print(i_samp)
         dataloader_iterator = iter(valid_loader)
         vaX1, vaY1 = next(dataloader_iterator)
-        # print("this is for debug please:", vaY1)
-        # x = torch.from_numpy(np.asarray(vaX1)).float()
         x = torch.from_numpy(np.asarray(vaX[None, i_samp:i_samp+1,:,:])).float().to(device)
-        # print("test here: ", x.type())
 
         Yhat[i_samp] = np.argmax(F.softmax(classifier(x.cpu()), dim=1).cpu().detach().numpy())
         z = gce.encoder(x.to(device))[0]
