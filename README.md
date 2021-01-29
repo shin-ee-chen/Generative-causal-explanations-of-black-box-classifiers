@@ -78,8 +78,11 @@ Follow the detailed description [here](https://github.com/uvadlc/uvadlc_practica
 
 # How to start
 ### Running one script to get results
-We provide a jupyter notebook (.ipynb) for displaying all the results. In case you want to run different parts separately, you can always check the following commands:
-
+We provide one single python file for displaying all the results (for convenience). Run the following command to get all the reproduced figures/results: 
+```
+python generate_figures.py
+```
+In case you want to run different parts separately, you can always check the following commands:
 ### Train on 1/4/9 MNIST dataset:
 1. To train CNN classifier:
 ```
