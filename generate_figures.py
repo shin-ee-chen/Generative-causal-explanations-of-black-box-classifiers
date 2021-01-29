@@ -35,8 +35,8 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
 
     set_seed(seed)
 
-    GCEs = {'MNIST_38': MNIST_CVAE, 'MNIST_149': MNIST_CVAE}
-    CLFs = {'MNIST_38': MNIST_CNN, 'MNIST_149': MNIST_CNN}
+    GCEs = {'MNIST_38': MNIST_CVAE, 'MNIST_149': MNIST_CVAE, 'FMNIST_034': MNIST_CVAE}
+    CLFs = {'MNIST_38': MNIST_CNN, 'MNIST_149': MNIST_CNN, 'FMNIST_034': MNIST_CNN}
     if implementation.upper() not in GCEs.keys():
         print('Not implemented. Please choose one from', GCEs.keys())
         # return None
@@ -49,8 +49,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
         dataset = MNIST_limited(train=False, classes=classes)
 
     elif dataset_name == 'FMNIST':
-        # TODO: add FMNIST
-        dataset = MNIST_limited(train=False, classes=classes)
+        dataset = Fashion_MNIST_limited(train=False, classes=classes)
 
     loader = data.DataLoader(dataset, batch_size=64, shuffle=shuffle)
     loader = iter(loader)
@@ -238,8 +237,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
 
     def information_flows():
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        if torch.cuda.is_available() and implementation == 'fmnist_034':  ## because the model is trained on gpu
-            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        if implementation == 'fmnist_034':
             # information flow ablation study for fmnist data (figure 5a in the paper)
             M = 3
             K = 2
@@ -272,9 +270,6 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
             plt.savefig(fname=os.path.join(fig_dir, 'InformationFlow.pdf'))
             plt.close()
 
-        else:
-            print("You need cuda to make this plot because all our models are trained on gpu.")
-
     def ablation_accuracy():
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         if torch.cuda.is_available() and implementation == 'fmnist_034':  ## because the model is trained on gpu
@@ -283,13 +278,13 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
             # load GCE
             gce_path = './pretrained_models/fmnist_gce_034/'
             gce = torch.load(os.path.join(gce_path,'gce_model.pt'), map_location=device)
-            print("gce pretrained model loaded!")
+            #print("gce pretrained model loaded!")
             # load classifier
-            classifier = MNIST_CNN(model_param_set='OShaugnessy', M=M, lr=5e-4, momentum=0.9)
+            classifier = MNIST_CNN(model_param_set='OShaugnessy', M=3, lr=5e-4, momentum=0.9)
             classifier_path = './pretrained_models/fmnist_cnn_034/'
             checkpoint_model = torch.load(os.path.join(classifier_path,'model.pt'), map_location=device)
             classifier.load_state_dict(checkpoint_model['model_state_dict_classifier'])
-            print("classifier pretrained model loaded!")
+            #print("classifier pretrained model loaded!")
 
             # --- load test data ---
             train_set, valid_set = Fashion_MNIST_limited(train=True, classes=[0,3,4])
@@ -338,7 +333,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
             for i in range(z_dim):
                 classifier_accuracy_aspectremoved[i] = np.mean(vaY == Yhat_aspectremoved[i,:])
 
-            print(classifier_accuracy, classifier_accuracy_reencoded, classifier_accuracy_aspectremoved)
+            #print(classifier_accuracy, classifier_accuracy_reencoded, classifier_accuracy_aspectremoved)
 
             # plot classifier accuracy
             # we use author's code for making the exact same plot
@@ -394,3 +389,4 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
 
 generate_figures(implementation='mnist_149')
 generate_figures(implementation='mnist_38')
+generate_figures(implementation='fmnist_034')
