@@ -1,6 +1,5 @@
 - [UvA_FACT_2021](#uva_fact_2021)
 - [Structure](#structure)
-- [Students](#students)
 - [Requirements](#requirements)
 - [How to start](#how-to-start)
 - [Results](#results)
@@ -56,14 +55,7 @@ UvA_FACT_2021
 │   └── file for training the gce (for both mnist and fmnist).
 ```
 
-# Students
-Xinyi Chen
 
-Qingzhi Hu
-
-Mario Holubar
-
-Ivo Verhoeven
 
 # Requirements
 ## Environment
