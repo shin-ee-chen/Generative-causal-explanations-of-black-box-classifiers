@@ -1,4 +1,4 @@
-name: FACT
+name: dl2020
 channels:
   - pytorch
   - conda-forge
