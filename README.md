@@ -67,6 +67,8 @@ conda env create -f environment_Lisa.yml
 ```
 source activate dl2020
 ```
+Follow the detailed description [here](https://github.com/uvadlc/uvadlc_practicals_2020/blob/master/assignment_1/1_mlp_cnn/README.md).
+
 # How to start
 ### Train on 1/4/9 MNIST dataset:
 1. To train CNN classifier:
