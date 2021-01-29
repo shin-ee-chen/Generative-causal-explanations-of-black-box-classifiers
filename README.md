@@ -53,18 +53,32 @@ Ivo Verhoeven
 # Requirements
 
 # How to start
+### Train on 1/4/9 MNIST dataset:
+1. To train CNN classifier:
+```
+python mnist_classifier_train.py --classes 1 4 9 --max_epochs 30 \
+--datasets traditional
+ ```
+
+2. To train VAE and generate Figure 13:
+```
+python mnist_cvae_train.py --classes 1 4 9  --max_steps 8000 \
+--batch_size 64 --lr 5e-4 --Nalpha 75 --Nbeta 25 --K 2 --L 2 --lamb 0.1 \
+--dataset traditional
+ ```
 
 ### Train on fashion MNIST dataset:
 1. To train CNN classifier:
 ```
-   python mnist_classifier_train.py --max_epochs 50 --batch_size 64 --momentum 0.5  --lr 0.1  
-   --classes 0 3 4 --datasets fashion
+python mnist_classifier_train.py --classes 0 3 4 --max_epochs 50 \
+--datasets fashion --log_dir fmnist_cnn
  ```
 
-2. To train VAE and generate FIgure 17:
+2. To train VAE and generate Figure 17:
 ```
-   python mnist_cvae_train.py --classes 0 3 4  --max_steps 8000 --batch_size 32 --lr 1e-4 
-   --Nalpha 100 --Nbeta 25 --K 2 --L 4 --lamb 0.05 --dataset fashion
+python mnist_cvae_train.py --classes 0 3 4  --max_steps 8000 \
+--batch_size 32 --lr 1e-4 --Nalpha 100 --Nbeta 25 --K 2 --L 4 --lamb 0.05 \
+--dataset fashion --log_dir fmnist_gce --classifier_path fmnist_cnn_034
  ```
 
 ### Figure 5(ab) for information flow and removing aspects
