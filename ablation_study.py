@@ -2,12 +2,9 @@ import os
 import argparse
 
 import torch
-import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 import torch.utils.data as data
 
 from models.mnist_cnn import MNIST_CNN
-from utils.reproducibility import set_seed, set_deteministic
 from datasets.mnist import MNIST_limited
 
 from mnist_cvae_train import GenerateCallback
@@ -24,25 +21,28 @@ def train(args):
     Inputs:
         args - Namespace object from the argparser
     """
-    print("hi let us start to plot!")
+    print("Hi let us start to the information flow and accuracies for ablation study!")
     M = len(args.classes)
 
     # load classifier
     classifier = MNIST_CNN(model_param_set=args.clf_param_set, M=M,
                         lr=args.lr, momentum=args.momentum)
 
-    classifier_path = './pretrained_models/fmnist_cnn_034/'
+    classifier_path = './pretrained_models/mnist_cnn_149/'
     checkpoint_model = torch.load(os.path.join(classifier_path,'model.pt'), map_location=device)
     classifier.load_state_dict(checkpoint_model['model_state_dict_classifier'])
 
     # load GCE
-    gce_path = './pretrained_models/fmnist_gce_034/'
+    gce_path = './pretrained_models/mnist_gce_149/'
     gce = torch.load(os.path.join(gce_path,'gce_model.pt'), map_location=device)
+
+    print("pretrained model loaded!")
 
     # plot information_flow
     z_dim = args.K + args.L
     info_flow = gce.information_flow_single(range(0,z_dim))
 
+    # we use author's code for making the exact same plot
     cols = {'golden_poppy' : [1.000,0.761,0.039],
         'bright_navy_blue' : [0.047,0.482,0.863],
         'rosso_corsa' : [0.816,0.000,0.000]}
@@ -55,8 +55,8 @@ def train(args):
     ax.yaxis.grid(linewidth='0.3')
     plt.ylabel('Information flow to $\\widehat{Y}$')
     plt.title('Information flow of individual causal factors')
-    plt.savefig('./figures/Figure5ab/fig5a.svg')
-    plt.savefig('./figures/Figure5ab/fig5a.png')
+    plt.savefig('./figures/ablation_study/information_flow.svg')
+    plt.savefig('./figures/ablation_study/information_flow.png')
     print("done 5a")
 
     # --- load test data ---
@@ -109,6 +109,7 @@ def train(args):
     print(classifier_accuracy, classifier_accuracy_reencoded, classifier_accuracy_aspectremoved)
 
     # --- plot classifier accuracy ---
+    # we use author's code for making the exact same plot
     cols = {'black' : [0.000, 0.000, 0.000],
             'golden_poppy' : [1.000,0.761,0.039],
             'bright_navy_blue' : [0.047,0.482,0.863],
@@ -123,11 +124,11 @@ def train(args):
                   cols['rosso_corsa'], cols['bright_navy_blue'], cols['bright_navy_blue']])
     plt.xticks(range(z_dim+2), x_labels)
     plt.ylim((0.2,1.0))
-    plt.yticks((0.2,0.4,0.6))#,('0.5','','0.75','','1.0'))
+    plt.yticks((0.2,0.4,0.6))
     plt.ylabel('Classifier accuracy')
     plt.title('Classifier accuracy after removing aspect')
-    plt.savefig('./figures/Figure5ab/fig5b.svg')
-    plt.savefig('./figures/Figure5ab/fig5b.png')
+    plt.savefig('./figures/ablation_study/accuracy_comparison.svg')
+    plt.savefig('./figures/ablation_study/accuracy_comparison.png')
 
 
 
@@ -148,26 +149,6 @@ if __name__ == '__main__':
                         help='Learning rate to use')
     parser.add_argument('--momentum', default=0.9, type=float,
                         help='Learning rate to use')
-    parser.add_argument('--batch_size', default=64, type=int,
-                        help='Minibatch size')
-    parser.add_argument('--max_epochs', default=50, type=int,
-                        help='Max number of training epochs')
-
-    # Other hyperparameters
-
-    parser.add_argument('--seed', default=42, type=int,
-                        help='Seed to use for reproducing results')
-    parser.add_argument('--num_workers', default=0, type=int,
-                        help='Number of workers to use in the data loaders.')
-    parser.add_argument('--progress_bar', default=True, action='store_true',
-                        help=('Use a progress bar indicator for interactive experimentation. '
-                              'Not to be used in conjuction with SLURM jobs'))
-    parser.add_argument('--log_dir', default='mnist_cnn', type=str,
-                        help='Directory where the PyTorch Lightning logs should be created. Automatically adds \
-                            the classes to directory. If not needed, turn off using add_classes_to_cpt_path flag.')
-    parser.add_argument('--add_classes_to_cpt_path', default=True,
-                        help='Whether to add the classes to cpt directory.')
-
 
     # Debug parameters
     parser.add_argument('--debug_version', default=False,
