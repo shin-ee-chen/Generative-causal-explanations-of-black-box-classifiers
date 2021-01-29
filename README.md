@@ -38,14 +38,6 @@ UvA_FACT_2021
     └──     module for computing variational loss (ELBO, KLD, BPD)
 ```
 
-# Students
-Xinyi Chen
-
-Qingzhi Hu
-
-Mario Holubar
-
-Ivo Verhoeven
 
 # Text-Extension
 
