@@ -1,6 +1,5 @@
 - [UvA_FACT_2021](#uva_fact_2021)
 - [Structure](#structure)
-- [Students](#students)
 - [Text-Extension](#text-extension)
   - [Environment](#environment)
   - [Training](#training)
