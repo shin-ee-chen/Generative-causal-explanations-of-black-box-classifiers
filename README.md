@@ -37,8 +37,8 @@ UvA_FACT_2021
 │   │       module with some methods for reproducibility, including universal seed setting, model loading, etc.
 │   ├── vae_loss.py
 │   └──     module for computing variational loss (ELBO, KLD, BPD)
-├── experiments
-│   └── will contain all code for experimentation using pretrained models
+├── generate_figures.py
+│   └── one script to get all the results.
 ```
 
 # Students
