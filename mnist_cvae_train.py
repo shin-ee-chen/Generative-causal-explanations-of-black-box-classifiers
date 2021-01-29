@@ -110,7 +110,7 @@ def train(args):
     Inputs:
         args - Namespace object from the argument parser
     """
-
+    
     if args.add_classes_to_log_dir == True:
         classes_str = ''.join(str(x) for x in sorted(args.classes))
         full_log_dir = os.path.join(CHECKPOINT_PATH, args.log_dir + '_' + classes_str)
@@ -186,7 +186,10 @@ def train(args):
     test_result = trainer.test(
         model, test_dataloaders=test_loader, verbose=not args.silent)
     
-    gce_path = os.path.join('pretrained_models', args.log_dir+ '_' + classes_str)
+    if args.add_classes_to_log_dir:
+        gce_path = os.path.join('pretrained_models', args.log_dir + '_' + classes_str)
+    else:
+        gce_path = os.path.join('pretrained_models', args.log_dir)
     if not os.path.exists(gce_path):
         os.makedirs(gce_path, exist_ok=True)
 
