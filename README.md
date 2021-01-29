@@ -52,9 +52,9 @@ UvA_FACT_2021
 ├── find_params.py
 │   └── Algorithm I (in the paper) implementation.
 ├── mnist_classifier_train.py
-│   └── file for training the classifier.
+│   └── file for training the classifier (for both mnist and fmnist).
 ├── mnist_cvae_train.py
-│   └── file for training the gce.
+│   └── file for training the gce (for both mnist and fmnist).
 ```
 
 # Students
