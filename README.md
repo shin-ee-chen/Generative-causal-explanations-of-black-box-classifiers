@@ -20,6 +20,8 @@ UvA_FACT_2021
 │   ├── raw data sets in named directories
 │   ├── mnist.py
 │   └──     file that contains code process MNIST, limiting it to specified classes only
+│   ├── fashion_mnist.py
+│   └──     file that contains code process FMNIST, limiting it to specified classes only
 ├── figures
 │   │     all figures produced during training, or otherwise relevant to the project Maybe should be placed in root directory
 │   └──   PyTorch (Lightning) code for creating all training all models described 
@@ -28,6 +30,8 @@ UvA_FACT_2021
 │   │       models for classifying the limitied MNIST datasets
 │   ├── mnist_cvae.py
 │   └──     cvae for explaining the limitied MNIST classifier  
+├── pretrained_models
+│   ├── all the pretrained models are here
 ├── utils
 │   ├── cvae_latent_visualization.py
 │   │       module for generating latent variable sweeps for a cvae
@@ -37,8 +41,20 @@ UvA_FACT_2021
 │   │       module with some methods for reproducibility, including universal seed setting, model loading, etc.
 │   ├── vae_loss.py
 │   └──     module for computing variational loss (ELBO, KLD, BPD)
+│   ├── timing.py
+│   └──     module for computing the time required for runnign the experiments
 ├── generate_figures.py
 │   └── one script to get all the results.
+├── environment_Lisa.yml
+│   └── environment file for training on gpu.
+├── environment.yml
+│   └── environment file for training locally.
+├── find_params.py
+│   └── Algorithm I (in the paper) implementation.
+├── mnist_classifier_train.py
+│   └── file for training the classifier.
+├── mnist_cvae_train.py
+│   └── file for training the gce.
 ```
 
 # Students
