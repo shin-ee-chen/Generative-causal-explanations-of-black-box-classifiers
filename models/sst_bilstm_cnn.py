@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import pytorch_lightning as pl
-
 class sst_bilstm_cnn(pl.LightningModule):
 
     def __init__(self, vocab, dropout, lstm_hidden, filters, cnn_ksize, max_ksize, padded_length, M, lr, lr_decay):
@@ -47,7 +46,6 @@ class sst_bilstm_cnn(pl.LightningModule):
         for i in range(3):
             height = int(((height - self.cnn_ksize + 1) - self.max_ksize)/ self.max_ksize + 1)
             width = int(((width - self.cnn_ksize + 1) - self.max_ksize) / self.max_ksize + 1)
-        print('Output shape of convolutions:', height, width)
 
         self.linear = nn.Sequential(
             nn.Flatten(),

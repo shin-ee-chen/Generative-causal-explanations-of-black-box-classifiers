@@ -141,41 +141,79 @@ class LSTM_Decoder(nn.Module):
             nn.init.uniform_(param, -std, std)
         nn.init.uniform_(self.embed.weight, -std * 10, std * 10)
 
-    def forward(self, input, z, debug=False):
+    def forward(self, z, input=None, debug=False):
         """
         Args:
-            input: (batch_size, seq_len)
-            z: (batch_size, n_sample, nz)
+            input: (seq_len, batch_size)
+            z: (1, batch_size, nz)
         """
 
-        n_sample, batch_size, z_dim = z.size()
-        seq_len = input.size(0)
+        batch_size, z_dim = z.size(-2), z.size(-1)
 
         # (seq_len, batch_size, embedding_dim)
-        word_embed = self.embed(input)
-        if debug:
-            print('(seq_len, batch_size, embedding_dim)', word_embed.shape)
+        if input != None:
 
-        word_embed = self.dropout_in(word_embed)
+            seq_len = input.size(0)
 
-        z_ = z.expand(seq_len, batch_size, z_dim)
+            word_embed = self.embed(input)
+            if debug:
+                print('(seq_len, batch_size, embedding_dim)', word_embed.shape)
 
-        # (seq_len, batch_size * n_sample, embedding_dim + z_dim)
-        word_embed = torch.cat((word_embed, z_), dim=-1)
-        if debug:
-            print('(seq_len, batch_size * n_sample, embedding_dim + z_dim)', word_embed.shape)
+            word_embed = self.dropout_in(word_embed)
 
-        z = z.view(batch_size * n_sample, z_dim)
-        c_init = self.linear_in(z).unsqueeze(0)
-        h_init = torch.tanh(c_init)
+            z_ = z.expand(seq_len, batch_size, z_dim)
 
-        output, _ = self.lstm(word_embed, (h_init, c_init))
+            # (seq_len, batch_size, embedding_dim + z_dim)
+            word_embed = torch.cat((word_embed, z_), dim=-1)
+            if debug:
+                print('(seq_len, batch_size, embedding_dim + z_dim)', word_embed.shape)
 
-        # (seq_len, batch_size * n_sample, vocab_size)
-        output = self.dropout_out(output)
-        if debug:
-            print('(seq_len, batch_size * n_sample, vocab_size)', output.shape)
-        output_logits = self.linear_out(output)
+            z = z.view(batch_size, z_dim)
+            c_init = self.linear_in(z).unsqueeze(0)
+            h_init = torch.tanh(c_init)
+
+            output, _ = self.lstm(word_embed, (h_init, c_init))
+
+            output = self.dropout_out(output)
+            if debug:
+                print('(seq_len, batch_size, vocab_size)', output.shape)
+            output_logits = self.linear_out(output)
+
+        else:
+
+            seq_len = 81
+
+            input = torch.full(size=(1, z.size(0)),
+                               fill_value=self.vocab['<s>'],
+                               dtype=torch.long, device=self.device)
+
+            z = z.view(batch_size, z_dim)
+            c = self.linear_in(z).unsqueeze(0)
+            h = torch.tanh(c)
+
+            output_logits = []
+            for t in range(seq_len):
+                # (1, batch_size, embedding_dim)
+                word_embed = self.embed(input)
+                word_embed = self.dropout_in(word_embed)
+
+                # (1, batch_size, embedding_dim + hidden_dim)
+                word_embed = torch.cat((word_embed, z.unsqueeze(0)), dim=-1)
+
+                # (1, batch_size, hidden_dim)
+                output, (h, c) = self.lstm(word_embed, (h, c))
+                output = self.dropout_out(output)
+
+                # (1, batch_size, vocab_size)
+                logits_t = self.linear_out(output)
+
+                # (1, batch_size)
+                input = torch.argmax(logits_t, dim=-1)
+
+                output_logits.append(logits_t)
+
+            # (seq_len, batch_size, vocab_size)
+            output_logits = torch.cat(output_logits, dim=0)
 
         return output_logits
 
@@ -397,7 +435,7 @@ class LSTM_Decoder(nn.Module):
 
 class lm_VAE(pl.LightningModule):
 
-    def __init__(self, vocab, embedding_dims, hidden_dims, latent_dims, z_iters, aggressive, inner_iter, kl_weight_start, anneal_rate, decoding_strategy, max_aggressive_epochs, min_scheduler_epoch):
+    def __init__(self, vocab, embedding_dims, hidden_dims, latent_dims, z_iters, aggressive, inner_iter, kl_weight_start, anneal_rate, decoding_strategy, max_aggressive_epochs, min_scheduler_epoch, aggressive_patience):
 
         super().__init__()
         self.save_hyperparameters()
@@ -415,6 +453,12 @@ class lm_VAE(pl.LightningModule):
         self.max_aggressive_epochs = max_aggressive_epochs
         self.min_scheduler_epoch = min_scheduler_epoch
 
+        self.mi_patience = aggressive_patience
+        self.stable_mi = False
+        self.mi_prev = 0
+        self.mi_curr = 0
+        self.val_batches = 1
+
         self.encoder = LSTM_Encoder(vocab=self.vocab,
                                     embedding_dims=self.embedding_dims,
                                     hidden_dims=hidden_dims,
@@ -426,7 +470,7 @@ class lm_VAE(pl.LightningModule):
                                     latent_dims=self.latent_dims)
 
         vocab_mask = torch.ones(len(self.vocab))
-        self.loss_fn = nn.CrossEntropyLoss(weight=vocab_mask, reduction='none')
+        self.loss_fn = nn.CrossEntropyLoss(weight=vocab_mask, reduction='none', ignore_index=self.vocab['<pad>'])
 
         self.t0 = time.time()
 
@@ -441,7 +485,7 @@ class lm_VAE(pl.LightningModule):
         z = sample_reparameterize(mean, log_std)
 
         target = text[1:]
-        logits = self.decoder.forward(text[:-1], z)
+        logits = self.decoder.forward(z, text[:-1])
 
         L_rec = self.loss_fn(logits.view(-1, logits.size(-1)),
                              target.view(-1))
@@ -485,6 +529,19 @@ class lm_VAE(pl.LightningModule):
 
     def training_step(self, batch, batch_idx, optimizer_idx):
 
+        if batch_idx == 0:
+            self.mi_curr = self.mi_curr / self.val_batches
+            if (not self.aggressive) or self.mi_curr < self.mi_prev:
+                if (not self.stable_mi):
+                    self.stable_mi = True
+                self.mi_patience -= 1
+                print('MI has not improved. Will stop aggressive training in', self.mi_patience, 'epochs.')
+            if self.mi_patience <= 0:
+                self.aggressive = False
+
+            self.mi_prev = self.mi_curr
+            self.mi_curr, self.val_batches = 0, 0
+
         if self.current_epoch > self.max_aggressive_epochs-1:
             self.aggressive = False
 
@@ -509,13 +566,13 @@ class lm_VAE(pl.LightningModule):
                 self.manual_backward(loss, encoder_opt)
                 encoder_opt.step()
 
-                self.log("Train - Inner ELBO", loss)
+                self.log("Train - Inner ELBO", L_rec + L_reg)
 
                 burn_sents_len, burn_batch_size = batch.text.size()
                 burn_num_words += (burn_sents_len - 1) * burn_batch_size
                 burn_cur_loss += loss.sum().detach()
 
-                if i % (self.inner_iter//5) == 0:
+                if i % (self.inner_iter//10) == 0:
                     burn_cur_loss = burn_cur_loss / burn_num_words
                     if burn_pre_loss - burn_cur_loss < 0:
                         self.log("Train - Inner Steps", i)
@@ -531,6 +588,7 @@ class lm_VAE(pl.LightningModule):
                  on_step=True, on_epoch=False)
         self.log("Train - Outer L_reg", L_reg,
                  on_step=True, on_epoch=False)
+        self.log("Train - Outer ELBO", L_rec + L_reg)
         self.log("Train - KLD Weight", self.kl_weight,
                  on_step=True, on_epoch=False)
 
@@ -551,6 +609,8 @@ class lm_VAE(pl.LightningModule):
 
             print(f"Time: {mins:4d}m {secs:2d}s| Train {int(self.current_epoch):03d}.{int(batch_idx):03d}: L_rec={L_rec:6.2f}, L_reg={L_reg:6.2f}, Inner iters={int(i):02d}, KL weight={self.kl_weight:4.2f}")
 
+        return loss
+
     def validation_step(self, batch, batch_idx):
 
         L_rec, L_reg, mi = self.forward(batch, calc_mi=True)
@@ -564,14 +624,16 @@ class lm_VAE(pl.LightningModule):
 
         loss = L_rec + self.kl_weight * L_reg
 
-        self.log("Valid ELBO", loss,
-                 on_epoch=True)
+        self.log("Valid ELBO", L_rec + L_reg)
 
         t1 = time.time()
         dt = (t1 - self.t0) / 60
         mins, secs = int(dt), int((dt - int(dt)) * 60)
 
         print(f"Time: {mins:4d}m {secs:2d}s| Valid {int(self.current_epoch):03d}.{int(batch_idx):03d}: L_rec={L_rec:6.2f}, L_reg={L_reg:6.2f}, MI={mi:5.2f}")
+
+        self.mi_curr += mi
+        self.val_batches += 1
 
         return loss
 
@@ -582,10 +644,7 @@ class lm_VAE(pl.LightningModule):
         self.log("Test Reconstruction Loss", L_rec)
         self.log("Test Regularization Loss", L_reg)
         self.log("Test Encoder MI", mi)
-
-        loss = L_rec + self.kl_weight * L_reg
-
-        self.log("Test ELBO", loss)
+        self.log("Test ELBO", L_rec + L_reg)
 
     @torch.no_grad()
     def decode(self, text, decoding_strategy=None, beam_length=5):

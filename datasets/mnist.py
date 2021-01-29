@@ -10,7 +10,7 @@ def MNIST_limited(root='./datasets', train=True, classes=[3, 8], train_val_prop=
     """ Takes the regular 10-class MNIST and limits it to a subset, useful for generating the 3 vs. 8 explainer.
 
     Args:
-        root (str, optional): Gives the directory with the MNIST files. Defaults to './Dataset'.
+        root (str, optional): Gives the directory with the MNIST files. Defaults to './datasets'.
         train (bool, optional): Whether to get train or test set. Defaults to True.
         classes (list, optional): The list with permissible labels. Defaults to [3, 8].
         train_val_prop ([type], optional): The proportion of traindata to all available train data.

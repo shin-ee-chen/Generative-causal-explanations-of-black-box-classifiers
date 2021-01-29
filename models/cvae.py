@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
@@ -5,8 +6,7 @@ import pytorch_lightning as pl
 from models.mnist_cnn import MNIST_CNN
 from utils.reproducibility import load_latest
 from utils.vae_loss import sample_reparameterize, ELBO, ELBO_to_BPD
-from utils.information_flow import CVAE_to_params, joint_uncond
-
+from utils.information_flow import CVAE_to_params, joint_uncond, joint_uncond_singledim
 
 class CNN_Encoder(nn.Module):
     def __init__(self, img_channels: int = 1, num_filters: int = 64,
@@ -195,6 +195,16 @@ class MNIST_CVAE(pl.LightningModule):
         C, debug = joint_uncond(*CVAE_to_params(self))
 
         return C
+
+    def information_flow_single(self, dims):
+        ndims = len(dims)
+        Is = np.zeros(ndims)
+        for (i, dim) in enumerate(dims):
+            negI, _ = joint_uncond_singledim(*CVAE_to_params(self), dim)
+            # print("look here!", C, negI)
+            Is[i] = -1 * negI
+
+        return Is
 
     def configure_optimizers(self):
 

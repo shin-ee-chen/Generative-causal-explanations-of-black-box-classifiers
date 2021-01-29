@@ -12,7 +12,7 @@ class CNN_OShaugnessy(nn.Module):
         Args:
         - img_channels: int, the number of channels the MNIST images have
         - M: int, the number of output nodes
-            
+
         """
         super().__init__()
 

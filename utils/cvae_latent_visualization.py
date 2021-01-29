@@ -32,7 +32,7 @@ def CVAE_sweep(model, i=0, rows=8, dataset=None, save_loc=None):
     j = i+1
     label = 'alpha_{:d}'.format(
         j) if j <= model.K else 'beta_{:d}'.format(j-model.K)
-    sweep_range = range(-3, 3+1, 1)
+    sweep_range = np.arange(-3, 3+1, 1)
     colors = ['#FFC209', '#0B7ADC', '#8FC839', 'tab:red']
 
     print('CVAE latent variable sweep for', label)
