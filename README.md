@@ -99,9 +99,9 @@ python mnist_cvae_train.py --classes 0 3 4  --max_steps 8000 \
 ### Figure 5(ab) for information flow and removing aspects
 For getting Figure 5(ab) in the original pape, please run the following command:
 ```
-python plot5ab.py
+python ablation_study.py
 ```
-The produced figures would be in the directory figures/Figure5ab.
+The produced figures would be in the directory figures/ablation_study/information_flow.png and figures/ablation_study/accuracy_comparison.png
 
 
 
