@@ -29,7 +29,7 @@ def suppress_stdout_stderr():
 
 def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
                      single_sweep_ok=True, class_sweep_ok=True, information_flows_ok=True,
-                     ablation_accuracy_ok=True, zoomed_ok=True):
+                     ablation_accuracy_ok=True, zoomed_ok=True, filetype = 'pdf'):
 
     colors = ['#FFC209', '#0B7ADC', '#8FC839', 'tab:red']
 
@@ -141,7 +141,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
 
         fig_dir = os.path.join(FIGURE_PATH, implementation.upper(), 'pretrained')
         os.makedirs(fig_dir, exist_ok=True)
-        plt.savefig(fname=os.path.join(fig_dir, 'z_{:d}_zoomed.pdf'.format(zi) if zoomed else 'z_{:d}.pdf'.format(zi)))
+        plt.savefig(fname=os.path.join(fig_dir, ('z_{:d}_zoomed.'.format(zi) if zoomed else 'z_{:d}.'.format(zi)) + filetype))
 
         plt.close()
 
@@ -227,7 +227,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
 
         fig_dir = os.path.join(FIGURE_PATH, implementation.upper(), 'pretrained')
         os.makedirs(fig_dir, exist_ok=True)
-        plt.savefig(fname=os.path.join(fig_dir, 'class_{:d}_sweep.pdf'.format(class_int)))
+        plt.savefig(fname=os.path.join(fig_dir, 'class_{:d}_sweep.'.format(class_int) + filetype))
 
         plt.close()
 
@@ -267,7 +267,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
             plt.title('Information flow of individual causal factors')
             fig_dir = os.path.join(FIGURE_PATH, implementation.upper(), 'pretrained')
             os.makedirs(fig_dir, exist_ok=True)
-            plt.savefig(fname=os.path.join(fig_dir, 'InformationFlow.pdf'))
+            plt.savefig(fname=os.path.join(fig_dir, 'InformationFlow.' + filetype))
             plt.close()
 
     def ablation_accuracy():
@@ -359,7 +359,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
             plt.title('Classifier accuracy after removing aspect')
             fig_dir = os.path.join(FIGURE_PATH, implementation.upper(), 'pretrained')
             os.makedirs(fig_dir, exist_ok=True)
-            plt.savefig(fname=os.path.join(fig_dir, 'AblationAccuracy.pdf'))
+            plt.savefig(fname=os.path.join(fig_dir, 'AblationAccuracy.' + filetype))
             plt.close()
         else:
             print("You need cuda to make this plot because all our models are trained on gpu.")
@@ -386,7 +386,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
         for zi in range(gce.K):
             latent_sweep_single_factor(zi=zi, zoomed=True)
 
-
-generate_figures(implementation='mnist_149')
-generate_figures(implementation='mnist_38')
-generate_figures(implementation='fmnist_034')
+if __name__ == '__main__':
+    generate_figures(implementation='mnist_149')
+    generate_figures(implementation='mnist_38')
+    generate_figures(implementation='fmnist_034')
