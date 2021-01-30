@@ -270,14 +270,16 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
         # accuracy comparison ablation study for fmnist data (figure 5b in the paper)
 
         # --- load test data ---
-        #train_set, valid_set = Fashion_MNIST_limited(train=True, classes=[0,3,4])
-        valid_loader = data.DataLoader(dataset, batch_size=1, shuffle=False,
+        if dataset_name == 'MNIST':
+            _, dataset_val = MNIST_limited(train=True, classes=classes)
+            vaX = dataset_val.data
+            vaY = dataset_val.targets
+        elif dataset_name == 'FMNIST':
+            _, dataset_val = Fashion_MNIST_limited(train=True, classes=classes)
+            vaX = dataset_val.dataset.data
+            vaY = dataset_val.dataset.targets
+        valid_loader = data.DataLoader(dataset_val, batch_size=1, shuffle=False,
                                     drop_last=True, pin_memory=True, num_workers=0)
-
-        #X = train_set.data
-        #Y = train_set.targets
-        vaX = dataset.data
-        vaY = dataset.targets
 
         ntrain, nrow, ncol = vaX.shape
         x_dim = nrow*ncol
