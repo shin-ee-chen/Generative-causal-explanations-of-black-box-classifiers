@@ -66,7 +66,8 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
     clf = load_latest(trainer=CLFs[implementation.upper()],
                     save_name=clf_name,
                     map_location=torch.device('cpu'),
-                    inference=True)
+                    inference=True,
+                    silent=True)
 
     z_dim = min(gce.K + gce.L, rows)
 
@@ -236,157 +237,153 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
     ########################################################################
 
     def information_flows():
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        if implementation == 'fmnist_034':
-            # information flow ablation study for fmnist data (figure 5a in the paper)
-            M = 3
-            K = 2
-            L = 4
+        # information flow ablation study for fmnist data (figure 5a in the paper)
 
-            # load GCE
-            gce_path = './pretrained_models/fmnist_gce_034/'
-            gce = torch.load(os.path.join(gce_path,'gce_model.pt'), map_location=device)
-            print("gce pretrained model loaded!")
+        # plot information_flow
+        z_dim = gce.K + gce.L
+        info_flow = gce.information_flow_single(range(0,z_dim))
 
-            # plot information_flow
-            z_dim = K + L
-            info_flow = gce.information_flow_single(range(0,z_dim))
-
-            # we use author's code for making the exact same plot
-            cols = {'golden_poppy' : [1.000,0.761,0.039],
-                    'bright_navy_blue' : [0.047,0.482,0.863],
-                    'rosso_corsa' : [0.816,0.000,0.000]}
-            x_labels = ('$\\alpha_1$', '$\\alpha_2$', '$\\beta_1$', '$\\beta_2$', '$\\beta_3$', '$\\beta_4$')
-            fig, ax = plt.subplots()
-            ax.bar(range(z_dim), info_flow, color=[
-                cols['rosso_corsa'], cols['rosso_corsa'], cols['bright_navy_blue'],
-                cols['bright_navy_blue'], cols['bright_navy_blue'], cols['bright_navy_blue']])
-            plt.xticks(range(z_dim), x_labels)
-            ax.yaxis.grid(linewidth='0.3')
-            plt.ylabel('Information flow to $\\widehat{Y}$')
-            plt.title('Information flow of individual causal factors')
-            fig_dir = os.path.join(FIGURE_PATH, implementation.upper(), 'pretrained')
-            os.makedirs(fig_dir, exist_ok=True)
-            plt.savefig(fname=os.path.join(fig_dir, 'InformationFlow.' + filetype))
-            plt.close()
+        # we use author's code for making the exact same plot
+        cols = {'golden_poppy' : [1.000,0.761,0.039],
+                'bright_navy_blue' : [0.047,0.482,0.863],
+                'rosso_corsa' : [0.816,0.000,0.000]}
+        x_labels = []
+        fig, ax = plt.subplots()
+        colors = []
+        for i in range(gce.K):
+            x_labels.append(f'$\\alpha_{i}$')
+            colors.append(cols['rosso_corsa'])
+        for i in range(gce.L):
+            x_labels.append(f'$\\beta_{i}$')
+            colors.append(cols['bright_navy_blue'])
+        ax.bar(range(z_dim), info_flow, color=colors)
+        plt.xticks(range(z_dim), x_labels)
+        ax.yaxis.grid(linewidth='0.3')
+        plt.ylabel('Information flow to $\\widehat{Y}$')
+        plt.title('Information flow of individual causal factors')
+        fig_dir = os.path.join(FIGURE_PATH, implementation.upper(), 'pretrained')
+        os.makedirs(fig_dir, exist_ok=True)
+        plt.savefig(fname=os.path.join(fig_dir, 'InformationFlow.' + filetype))
+        plt.close()
 
     def ablation_accuracy():
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        if torch.cuda.is_available() and implementation == 'fmnist_034':  ## because the model is trained on gpu
-            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-            # accuracy comparison ablation study for fmnist data (figure 5b in the paper)
-            # load GCE
-            gce_path = './pretrained_models/fmnist_gce_034/'
-            gce = torch.load(os.path.join(gce_path,'gce_model.pt'), map_location=device)
-            #print("gce pretrained model loaded!")
-            # load classifier
-            classifier = MNIST_CNN(model_param_set='OShaugnessy', M=3, lr=5e-4, momentum=0.9)
-            classifier_path = './pretrained_models/fmnist_cnn_034/'
-            checkpoint_model = torch.load(os.path.join(classifier_path,'model.pt'), map_location=device)
-            classifier.load_state_dict(checkpoint_model['model_state_dict_classifier'])
-            #print("classifier pretrained model loaded!")
+        # accuracy comparison ablation study for fmnist data (figure 5b in the paper)
 
-            # --- load test data ---
-            train_set, valid_set = Fashion_MNIST_limited(train=True, classes=[0,3,4])
-            valid_loader = data.DataLoader(valid_set, batch_size=1, shuffle=False,
-                                        drop_last=True, pin_memory=True, num_workers=0)
+        # --- load test data ---
+        #train_set, valid_set = Fashion_MNIST_limited(train=True, classes=[0,3,4])
+        valid_loader = data.DataLoader(dataset, batch_size=1, shuffle=False,
+                                    drop_last=True, pin_memory=True, num_workers=0)
 
-            X = train_set.data
-            Y = train_set.targets
-            vaX = valid_set.dataset.data
-            vaY = valid_set.dataset.targets
+        #X = train_set.data
+        #Y = train_set.targets
+        vaX = dataset.data
+        vaY = dataset.targets
 
-            ntrain, nrow, ncol = X.shape
-            x_dim = nrow*ncol
+        ntrain, nrow, ncol = vaX.shape
+        x_dim = nrow*ncol
 
-            # compute classifier accuracy after removing latent factors (minor changes compared to author's code)
-            classifier_accuracy_original = np.zeros(z_dim)
-            Yhat = np.zeros((len(vaX)))
-            Yhat_reencoded = np.zeros((len(vaX)))
-            Yhat_aspectremoved = np.zeros((z_dim, len(vaX)))
+        # compute classifier accuracy after removing latent factors (minor changes compared to author's code)
+        classifier_accuracy_original = np.zeros(z_dim)
+        Yhat = np.zeros((len(vaX)))
+        Yhat_reencoded = np.zeros((len(vaX)))
+        Yhat_aspectremoved = np.zeros((z_dim, len(vaX)))
 
-            for i_samp in range(len(vaX)):
-                if (i_samp % 1000) == 0:
-                    print(i_samp)
-                dataloader_iterator = iter(valid_loader)
-                vaX1, vaY1 = next(dataloader_iterator)
-                x = torch.from_numpy(np.asarray(vaX[None, i_samp:i_samp+1,:,:])).float().to(device)
+        for i_samp in range(len(vaX)):
+            #if (i_samp % 1000) == 0:
+                #print(i_samp)
+            dataloader_iterator = iter(valid_loader)
+            vaX1, vaY1 = next(dataloader_iterator)
+            x = torch.from_numpy(np.asarray(vaX[None, i_samp:i_samp+1,:,:])).float().cpu()
 
-                Yhat[i_samp] = np.argmax(F.softmax(classifier(x.cpu()), dim=1).cpu().detach().numpy())
-                z = gce.encoder(x.to(device))[0]
+            Yhat[i_samp] = np.argmax(F.softmax(clf(x.cpu()), dim=1).cpu().detach().numpy())
+            z = gce.encoder(x.cpu())[0]
+            xhat = gce.decoder(z)
+            xhat = torch.sigmoid(xhat)
+            Yhat_reencoded[i_samp] = np.argmax(F.softmax(clf(xhat.cpu()), dim=1).cpu().detach().numpy())
+            for i_latent in range(z_dim):
+                z = gce.encoder(x.cpu())[0]
+                z[0,i_latent] = torch.randn((1))
                 xhat = gce.decoder(z)
                 xhat = torch.sigmoid(xhat)
-                Yhat_reencoded[i_samp] = np.argmax(F.softmax(classifier(xhat.cpu()), dim=1).cpu().detach().numpy())
-                for i_latent in range(z_dim):
-                    z = gce.encoder(x.to(device))[0]
-                    z[0,i_latent] = torch.randn((1))
-                    xhat = gce.decoder(z)
-                    xhat = torch.sigmoid(xhat)
-                    Yhat_aspectremoved[i_latent,i_samp] = np.argmax(F.softmax(classifier(xhat.cpu()), dim=1).cpu().detach().numpy())
-            vaY = np.asarray(vaY)
-            Yhat = np.asarray(Yhat)
-            Yhat_reencoded = np.asarray(Yhat_reencoded)
+                Yhat_aspectremoved[i_latent,i_samp] = np.argmax(F.softmax(clf(xhat.cpu()), dim=1).cpu().detach().numpy())
+        vaY = np.asarray(vaY)
+        Yhat = np.asarray(Yhat)
+        Yhat_reencoded = np.asarray(Yhat_reencoded)
 
-            classifier_accuracy = np.mean(vaY == Yhat)
-            classifier_accuracy_reencoded = np.mean(vaY == Yhat_reencoded)
-            classifier_accuracy_aspectremoved = np.zeros((z_dim))
-            for i in range(z_dim):
-                classifier_accuracy_aspectremoved[i] = np.mean(vaY == Yhat_aspectremoved[i,:])
+        classifier_accuracy = np.mean(vaY == Yhat)
+        classifier_accuracy_reencoded = np.mean(vaY == Yhat_reencoded)
+        classifier_accuracy_aspectremoved = np.zeros((z_dim))
+        for i in range(z_dim):
+            classifier_accuracy_aspectremoved[i] = np.mean(vaY == Yhat_aspectremoved[i,:])
 
-            #print(classifier_accuracy, classifier_accuracy_reencoded, classifier_accuracy_aspectremoved)
+        #print(classifier_accuracy, classifier_accuracy_reencoded, classifier_accuracy_aspectremoved)
 
-            # plot classifier accuracy
-            # we use author's code for making the exact same plot
-            cols = {'black' : [0.000, 0.000, 0.000],
-                    'golden_poppy' : [1.000,0.761,0.039],
-                    'bright_navy_blue' : [0.047,0.482,0.863],
-                    'rosso_corsa' : [0.816,0.000,0.000]}
-            x_labels = ('orig','reenc','$\\alpha_1$', '$\\alpha_2$', '$\\beta_1$', '$\\beta_2$',
-                        '$\\beta_3$', '$\\beta_4$')
-            fig, ax = plt.subplots()
-            ax.yaxis.grid(linewidth='0.3')
-            ax.bar(range(z_dim+2), np.concatenate(([classifier_accuracy],
-                                                [classifier_accuracy_reencoded],
-                                                classifier_accuracy_aspectremoved)),
-                color=[cols['black'], cols['black'], cols['rosso_corsa'],
-                        cols['rosso_corsa'], cols['bright_navy_blue'],
-                        cols['bright_navy_blue'], cols['bright_navy_blue'],
-                        cols['bright_navy_blue']])
-            plt.xticks(range(z_dim+2), x_labels)
-            plt.ylim((0.2,1.0))
-            plt.yticks((0.2,0.4,0.6,0.8,1.0))#,('0.5','','0.75','','1.0'))
-            plt.ylabel('Classifier accuracy')
-            plt.title('Classifier accuracy after removing aspect')
-            fig_dir = os.path.join(FIGURE_PATH, implementation.upper(), 'pretrained')
-            os.makedirs(fig_dir, exist_ok=True)
-            plt.savefig(fname=os.path.join(fig_dir, 'AblationAccuracy.' + filetype))
-            plt.close()
-        else:
-            print("You need cuda to make this plot because all our models are trained on gpu.")
+        # plot classifier accuracy
+        # we use author's code for making the exact same plot
+        cols = {'black' : [0.000, 0.000, 0.000],
+                'golden_poppy' : [1.000,0.761,0.039],
+                'bright_navy_blue' : [0.047,0.482,0.863],
+                'rosso_corsa' : [0.816,0.000,0.000]}
+        x_labels = ['orig','reenc']
+        colors = [cols['black'], cols['black']]
+        for i in range(gce.K):
+            x_labels.append(f'$\\alpha_{i}$')
+            colors.append(cols['rosso_corsa'])
+        for i in range(gce.L):
+            x_labels.append(f'$\\beta_{i}$')
+            colors.append(cols['bright_navy_blue'])
+        fig, ax = plt.subplots()
+        ax.yaxis.grid(linewidth='0.3')
+        ax.bar(range(z_dim+2), np.concatenate(([classifier_accuracy],
+                                            [classifier_accuracy_reencoded],
+                                            classifier_accuracy_aspectremoved)),
+                color=colors)
+        plt.xticks(range(z_dim+2), x_labels)
+        plt.ylim((0.0,1.0))
+        plt.yticks((0.2,0.4,0.6,0.8,1.0))#,('0.5','','0.75','','1.0'))
+        plt.ylabel('Classifier accuracy')
+        plt.title('Classifier accuracy after removing aspect')
+        fig_dir = os.path.join(FIGURE_PATH, implementation.upper(), 'pretrained')
+        os.makedirs(fig_dir, exist_ok=True)
+        plt.savefig(fname=os.path.join(fig_dir, 'AblationAccuracy.' + filetype))
+        plt.close()
 
     ########################################################################
     ### Internal function calls ############################################
     ########################################################################
 
     if single_sweep_ok:
+        print("Latent sweep... ", end = '')
         for zi in range(z_dim):
             latent_sweep_single_factor(zi)
-
-    if class_sweep_ok:
-        for c in classes:
-            class_latent_sweep(c)
-
-    if information_flows_ok:
-        information_flows()
-
-    if ablation_accuracy_ok:
-        ablation_accuracy()
+        print("Done!")
 
     if zoomed_ok:
+        print("Zoomed latent sweep... ", end = '')
         for zi in range(gce.K):
             latent_sweep_single_factor(zi=zi, zoomed=True)
+        print("Done!")
+
+    if class_sweep_ok:
+        print("Class sweep... ", end = '')
+        for c in classes:
+            class_latent_sweep(c)
+        print("Done!")
+
+    if information_flows_ok:
+        print("Information flow... ", end = '')
+        information_flows()
+        print("Done!")
+
+    if ablation_accuracy_ok:
+        print("Ablation study... ", end = '')
+        ablation_accuracy()
+        print("Done!")
 
 if __name__ == '__main__':
+    print("Generating figures for MNIST 1/4/9...")
     generate_figures(implementation='mnist_149')
+    print("Generating figures for MNIST 3/8...")
     generate_figures(implementation='mnist_38')
+    print("Generating figures for FMNIST 0/3/4...")
     generate_figures(implementation='fmnist_034')
