@@ -53,10 +53,14 @@ coverage.xml
 docs/_build/
 
 # Personal additions
-Scratchpad.py
-Scratchpad.ipynb
+Scratchpad*.py
+scratchpad*.py
+Scratchpad*.ipynb
+scratchpad*.ipynb
 .vscode
 debug/
+/datasets/**
+text_vae*/
 
 *.out
 *.job

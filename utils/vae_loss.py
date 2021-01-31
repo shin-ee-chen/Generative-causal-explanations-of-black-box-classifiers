@@ -41,14 +41,13 @@ def KLD(mean, log_std):
     """
 
     log_var = 2*log_std
-    KLD = 0.5 * torch.sum(torch.exp(log_var) + mean ** 2 - 1 - log_var, dim=1)
+    KLD = 0.5 * torch.sum(torch.exp(log_var) + mean ** 2 - 1 - log_var, dim=-1)
 
     return KLD
 
 
 def ELBO(input_batch, reconstructed, mean, log_std):
     """
-    
 
     Args:
         input_batch ([type]): [description]

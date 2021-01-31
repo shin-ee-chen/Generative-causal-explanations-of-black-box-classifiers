@@ -16,7 +16,7 @@ from datasets.mnist import MNIST_limited
 from datasets.fashion_mnist import Fashion_MNIST_limited
 
 from utils.cvae_latent_visualization import CVAE_sweep
-from utils.reproducibility import set_seed, set_deteministic, load_latest
+from utils.reproducibility import set_seed, set_deterministic, load_latest
 from utils.timing import Timer
 
 CHECKPOINT_PATH = './checkpoints'
@@ -144,7 +144,7 @@ def train(args):
     else:
         callbacks = [GenerateCallback(batch_size=8, save_to_disk=True, save_dir = args.log_dir, every_n_epochs=args.sample_every, valid_data=valid_set)]
     
-    set_deteministic()
+    set_deterministic()
 
     set_seed(42)
 
