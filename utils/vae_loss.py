@@ -59,7 +59,7 @@ def ELBO(input_batch, reconstructed, mean, log_std):
         [type]: [description]
     """
 
-    rec_loss = torch.sum(F.binary_cross_entropy(reconstructed, input_batch, reduction='none'),
+    rec_loss = torch.sum(F.mse_loss(reconstructed, input_batch, reduction='none'),
                          dim=(1, 2, 3))
     reg_loss = KLD(mean, log_std)
     elbo = rec_loss + reg_loss

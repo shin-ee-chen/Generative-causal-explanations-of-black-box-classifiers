@@ -12,12 +12,12 @@ plt.rcParams["text.usetex"]
 
 from utils.vae_loss import sample_reparameterize, ELBO, ELBO_to_BPD
 
-FIGURE_PATH = './Figures'
+FIGURE_PATH = './figures'
 
 @torch.no_grad()
 def CVAE_sweep(model, i=0, rows=8, dataset=None, save_loc=None):
-    """Produces a sweep over a single latent variables in the (C)VAE,
-    and saves the image to the './Figures' directory.
+    """Produces a sweep over a single latent variables in the (C)VAE, 
+    and saves the image to the './figures' directory.
 
     Args:
         model ([type]): The traind CVAE which is used to explain the classifier.
@@ -27,14 +27,14 @@ def CVAE_sweep(model, i=0, rows=8, dataset=None, save_loc=None):
             Must be iterable.
         save_loc (path, optional): The name of the save. Defaults to named variable.
     """
-
+    
     latent_dim = model.K + model.L
     j = i+1
     label = 'alpha_{:d}'.format(
         j) if j <= model.K else 'beta_{:d}'.format(j-model.K)
-    sweep_range = np.arange(-3, 3+1, 1)
+    sweep_range = range(-3, 3+1, 1)
     colors = ['#FFC209', '#0B7ADC', '#8FC839', 'tab:red']
-
+    
     print('CVAE latent variable sweep for', label)
 
     dataloader = data.DataLoader(dataset, batch_size=rows, shuffle=False,
@@ -66,9 +66,9 @@ def CVAE_sweep(model, i=0, rows=8, dataset=None, save_loc=None):
         for z_val in sweep_range:
 
             z[:, i] += z_val
-            recon_img = torch.round(torch.sigmoid(model.decoder(z)))
+            recon_img = torch.sigmoid(model.decoder(z))
             recon_img.detach_()
-
+            
             z_sweep.append(recon_img)
 
             z[:, i] -= z_val
@@ -84,7 +84,7 @@ def CVAE_sweep(model, i=0, rows=8, dataset=None, save_loc=None):
 
             t = torch.argmax(model.classifier(img[None, :])).item()
 
-            ax.imshow(img.permute(1, 2, 0).cpu().numpy().squeeze(), cmap='binary',
+            ax.imshow(img.permute(1, 2, 0).squeeze().cpu().numpy(), cmap='gray_r',
                       vmin=0, vmax=1)
 
             ax.tick_params(axis='both', which='both',

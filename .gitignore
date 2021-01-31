@@ -61,3 +61,9 @@ scratchpad*.ipynb
 debug/
 /datasets/**
 text_vae*/
+
+*.out
+*.job
+.gitignore
+
+.DS_Store
