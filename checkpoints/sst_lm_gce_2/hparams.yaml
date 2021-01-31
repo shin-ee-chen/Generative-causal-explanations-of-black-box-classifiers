@@ -1,0 +1,10 @@
+K: 1
+Nalpha: 250
+Nbeta: 10
+betas: !!python/tuple
+- 0.5
+- 0.99
+clf_path: ''
+lamb: 0.001
+lr: 0.001
+vae_path: ''

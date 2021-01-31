@@ -3,7 +3,7 @@ import torch.nn as nn
 import pytorch_lightning as pl
 
 from models.sst_bilstm_cnn import sst_bilstm_cnn
-from models.lm_vae_old import lm_VAE
+from models.lm_vae import lm_VAE
 from utils.information_flow import joint_uncond
 from utils.reproducibility import load_latest
 
@@ -20,7 +20,7 @@ class lm_gce(pl.LightningModule):
             clf = load_latest(sst_bilstm_cnn, clf_path, inference=True)
 
         if vae_path == '':
-            vae = load_latest(lm_VAE, 'text_vae_old')
+            vae = load_latest(lm_VAE, 'text_vae')
         else:
             vae = load_latest(lm_VAE, vae_path)
 
@@ -70,7 +70,7 @@ class lm_gce(pl.LightningModule):
             return params, decoder, classifier, self.device
 
 
-        C, debug = joint_uncond(*_lm_gce_to_params(self))
+        C, debug = joint_uncond(*_lm_gce_to_params(self), argmax=True)
 
         return C
 

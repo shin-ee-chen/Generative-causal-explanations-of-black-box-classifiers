@@ -1,8 +1,0 @@
-# Sweep over z_8
--3.00: The story is a lot of the story , and the story is a lot of a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
--2.00: The story is a lot of the story , and the story is a lot of a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
--1.00: The story is a lot of the story , and the story is a lot of a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
-+0.00: The story is a lot of the story , and the story is a lot of a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
-+1.00: The story is a lot of the story , and the story is a lot of a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
-+2.00: The story is a lot of the story , and the story is a lot of a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
-+3.00: The story is a lot of the story , and the story is a lot of a movie . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>

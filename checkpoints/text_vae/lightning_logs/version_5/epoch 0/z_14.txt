@@ -1,8 +1,0 @@
-# Sweep over z_14
--3.00: A a a but . but . but . but . but . the . . . . . . . . . . . . . . . .
--2.00: A a a but . but . but . but . but . the . . . . . . . . . . . . . . . .
--1.00: A a a but . but . but . but . but . the . . . . . . . . . . . . . . . .
-+0.00: A a a but . but . but . but . but . the . . . . . . . . . . . . . . . .
-+1.00: A a a but . but . but . but . but . the . . . . . . . . . . . . . . . .
-+2.00: A a a but . but . but . but . but . the . . . . . . . . . . . . . . . .
-+3.00: A a a but . but . but . but . but . the . . . . . . . . . . . . . . . .

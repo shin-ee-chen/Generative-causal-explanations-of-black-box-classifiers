@@ -8,7 +8,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 import torch.utils.data as data
 
 from models.mnist_cnn import MNIST_CNN
-from utils.reproducibility import set_seed, set_deteministic
+from utils.reproducibility import set_seed, set_deterministic
 from datasets.mnist import MNIST_limited
 from datasets.fashion_mnist import Fashion_MNIST_limited
 from utils.timing import Timer
@@ -57,11 +57,11 @@ def train(args):
     trainer.logger._default_hp_metric = None
 
     set_seed(42)
-    set_deteministic()
+    set_deterministic()
 
     model = MNIST_CNN(model_param_set=args.clf_param_set, M=M,
                         lr=args.lr, momentum=args.momentum)
-    
+
     timer = Timer()
     trainer.fit(model, train_loader, valid_loader)
     print(f"Total training time: {timer.time()}")
@@ -77,7 +77,7 @@ def train(args):
         model, test_dataloaders=test_loader, verbose=False)
     result = {"Test": test_result[0]["Test_acc"],
               "Valid": val_result[0]["Test_acc"]}
-    
+
     save_folder = os.path.join("pretrained_models", args.log_dir)
     os.makedirs(save_folder, exist_ok=True)
     torch.save({
@@ -93,11 +93,11 @@ if __name__ == '__main__':
     # Model hyperparameters
     parser.add_argument('--clf_param_set', default='OShaugnessy',
                         type=str, help='The black-box classifier we wish to explain.')
-    
+
     parser.add_argument('--classes', default=[3, 8],
-                        type=int, nargs='+', 
+                        type=int, nargs='+',
                         help='The classes permittible for classification')
-    
+
     # Loss and optimizer hyperparameters
     parser.add_argument('--lr', default=0.1, type=float,
                         help='Learning rate to use')

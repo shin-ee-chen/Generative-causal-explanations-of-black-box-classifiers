@@ -1,8 +1,0 @@
-# Sweep over z_28
--3.00: It a a a the the the the the the the the the the the . . . . . . . . . . . . . . .
--2.00: It a a a the the the the the the the the the the the . . . . . . . . . . . . . . .
--1.00: It a a a the the the the the the the the the the the . . . . . . . . . . . . . . .
-+0.00: It a a a the the the the the the the the the the the . . . . . . . . . . . . . . .
-+1.00: It a a a the the the the the the the the the the the . . . . . . . . . . . . . . .
-+2.00: It a a a the the the the the the the the the the the . . . . . . . . . . . . . . .
-+3.00: It a a a the the the the the the the the the the the . . . . . . . . . . . . . . .

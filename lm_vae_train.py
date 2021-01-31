@@ -9,7 +9,7 @@ import torch.utils.data as data
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
-from models.lm_vae_old import lm_VAE
+from models.lm_vae import lm_VAE
 from datasets.sst import SST
 from utils.reproducibility import set_seed, set_deterministic
 

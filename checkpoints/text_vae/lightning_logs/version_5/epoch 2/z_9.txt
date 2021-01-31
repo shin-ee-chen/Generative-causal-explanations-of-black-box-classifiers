@@ -1,8 +1,0 @@
-# Sweep over z_9
--3.00: It 's not a lot of a lot of a movie that 's not as well as it 's not as well as it 's not as well as a
--2.00: It 's not a lot of a lot of a movie that 's not as well as it 's not as well as it 's not as well as a
--1.00: It 's not a lot of a lot of a movie that 's not as well as it 's not as well as it 's not as well as a
-+0.00: It 's not a lot of a lot of a movie that 's not as well as it 's not as well as it 's not as well as a
-+1.00: It 's not a lot of a lot of a movie that 's not as well as it 's not as well as it 's not as well as a
-+2.00: It 's not a lot of a lot of a movie that 's not as well as it 's not as well as it 's not as well as a
-+3.00: It 's not a lot of a lot of a movie that 's not as well as it 's not as well as it 's not as well as a

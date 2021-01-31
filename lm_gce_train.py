@@ -10,7 +10,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 from models.lm_gce import lm_gce
-from models.lm_vae_old import lm_VAE
+from models.lm_vae import lm_VAE
 from models.sst_bilstm_cnn import sst_bilstm_cnn
 from datasets.sst import SST
 from utils.reproducibility import set_seed, set_deterministic, load_latest

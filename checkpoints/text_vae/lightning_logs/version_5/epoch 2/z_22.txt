@@ -1,8 +1,0 @@
-# Sweep over z_22
--3.00: It 's not as a lot of the story , but it 's not to be . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
--2.00: It 's not as a lot of the story , but it 's not to be . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
--1.00: It 's not as a lot of the story , but it 's not to be . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
-+0.00: It 's not as a lot of the story , but it 's not to be . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
-+1.00: It 's not as a lot of the story , but it 's not to be . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
-+2.00: It 's not as a lot of the story , but it 's not to be . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
-+3.00: It 's not as a lot of the story , but it 's not to be . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>

@@ -1,8 +1,0 @@
-# Sweep over z_7
--3.00: A film , the film , the film , the film for the characters for the film . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
--2.00: A film , the film , the film , the film for the characters for the film . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
--1.00: A film , the film , the film , the film for the characters for the film . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
-+0.00: A film , the film , the film , the film for the characters for the film . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
-+1.00: A film , the film , the film , the film for the characters for the film . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
-+2.00: A film , the film , the film , the film for the characters for the film . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
-+3.00: A film , the film , the film , the film for the characters for the film . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>

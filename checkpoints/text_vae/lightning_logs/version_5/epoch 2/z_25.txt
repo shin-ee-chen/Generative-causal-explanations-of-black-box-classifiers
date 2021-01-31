@@ -1,8 +1,0 @@
-# Sweep over z_25
--3.00: One of the story is a lot of the story , but it 's not to be . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
--2.00: One of the story is a lot of the story , but it 's not to be . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
--1.00: One of the story is a lot of the story , but it 's not to be . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
-+0.00: One of the story is a lot of the story , but it 's not to be . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
-+1.00: One of the story is a lot of the story , but it 's not to be . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
-+2.00: One of the story is a lot of the story , but it 's not to be . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
-+3.00: One of the story is a lot of the story , but it 's not to be . <\s> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>

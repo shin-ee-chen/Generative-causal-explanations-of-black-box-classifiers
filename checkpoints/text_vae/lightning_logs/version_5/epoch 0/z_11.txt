@@ -1,8 +1,0 @@
-# Sweep over z_11
--3.00: It a a but . the the the the the the the the the . . . . . . . . . . . . . . . .
--2.00: It a a but . the the the the the the the the the . . . . . . . . . . . . . . . .
--1.00: It a a but . the the the the the the the the the . . . . . . . . . . . . . . . .
-+0.00: It a a but . the the the the the the the the the . . . . . . . . . . . . . . . .
-+1.00: It a a but . the the the the the the the the the . . . . . . . . . . . . . . . .
-+2.00: It a a but . the the the the the the the the the . . . . . . . . . . . . . . . .
-+3.00: It a a but . the the the the the the the the the . . . . . . . . . . . . . . . .
