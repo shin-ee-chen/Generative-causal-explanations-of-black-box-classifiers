@@ -1,6 +1,7 @@
 - [UvA_FACT_2021](#uva_fact_2021)
   - [Report Conclusion](#report-conclusion)
 - [Structure](#structure)
+- [Students](#students)
 - [Requirements](#requirements)
   - [Environment](#environment)
 - [How to start](#how-to-start)
@@ -85,6 +86,13 @@ UvA_FACT_2021
 └── FACT_report.pdf
     └── accompanying PDF report
 ```
+# Students
+Ivo Verhoeven 
+Mario Holubar 
+Xinyi Chen 
+Qingzhi Hu 
+Email address: ivo.verhoeven, mario.holubar, xinyi.chen, qingzhi.hu@student.uva.nl  
+
 
 # Requirements
 ## Environment
