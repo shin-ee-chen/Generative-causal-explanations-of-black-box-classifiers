@@ -62,6 +62,7 @@ debug/
 /datasets/**
 text_vae*/
 
+.ipynb_checkpoints/
 *.out
 *.job
 .gitignore
