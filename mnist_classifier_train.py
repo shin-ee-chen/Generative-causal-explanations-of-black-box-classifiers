@@ -48,7 +48,7 @@ def train(args):
     # Create a PyTorch Lightning trainer with the generation callback
     trainer = pl.Trainer(default_root_dir=full_log_dir,
                          checkpoint_callback=ModelCheckpoint(
-                             save_weights_only=True, mode="max", monitor="Valid_acc"),
+                             save_weights_only=True, mode="max", monitor="Valid acc"),
                          gpus=1 if (torch.cuda.is_available() and
                                     args.gpu) else 0,
                          max_epochs=args.max_epochs,
@@ -75,8 +75,8 @@ def train(args):
         model, test_dataloaders=valid_loader, verbose=False)
     test_result = trainer.test(
         model, test_dataloaders=test_loader, verbose=False)
-    result = {"Test": test_result[0]["Test_acc"],
-              "Valid": val_result[0]["Test_acc"]}
+    result = {"Test": test_result[0]["Test acc"],
+              "Valid": val_result[0]["Test acc"]}
 
     save_folder = os.path.join("pretrained_models", args.log_dir)
     os.makedirs(save_folder, exist_ok=True)
