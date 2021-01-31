@@ -18,7 +18,7 @@ from utils.reproducibility import load_latest, set_seed
 from utils.vae_loss import *
 
 FIGURE_PATH = './figures'
-PAGE_WIDTH = 10
+PAGE_WIDTH = 20
 
 @contextmanager
 def suppress_stdout_stderr():
