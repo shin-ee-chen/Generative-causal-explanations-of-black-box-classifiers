@@ -87,10 +87,9 @@ UvA_FACT_2021
     └── accompanying PDF report
 ```
 # Students
-Ivo Verhoeven 
-Mario Holubar 
-Xinyi Chen 
-Qingzhi Hu 
+Ivo Verhoeven, Mario Holubar, Xinyi Chen, Qingzhi Hu 
+
+
 Email address: ivo.verhoeven, mario.holubar, xinyi.chen, qingzhi.hu@student.uva.nl  
 
 
