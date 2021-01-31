@@ -140,7 +140,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
 
         fig.suptitle('Sweep over $\\{:s}$'.format(label), y=0.9, fontsize=11)
 
-        fig_dir = os.path.join(FIGURE_PATH, implementation.upper(), 'pretrained')
+        fig_dir = os.path.join(FIGURE_PATH, implementation.upper())
         os.makedirs(fig_dir, exist_ok=True)
         plt.savefig(fname=os.path.join(fig_dir, ('z_{:d}_zoomed.'.format(zi) if zoomed else 'z_{:d}.'.format(zi)) + filetype))
 
@@ -226,7 +226,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
 
         fig.suptitle('Latent sweeps for class {:d}'.format(class_int), y=0.95, fontsize=11)
 
-        fig_dir = os.path.join(FIGURE_PATH, implementation.upper(), 'pretrained')
+        fig_dir = os.path.join(FIGURE_PATH, implementation.upper())
         os.makedirs(fig_dir, exist_ok=True)
         plt.savefig(fname=os.path.join(fig_dir, 'class_{:d}_sweep.'.format(class_int) + filetype))
 
@@ -261,7 +261,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
         ax.yaxis.grid(linewidth='0.3')
         plt.ylabel('Information flow to $\\widehat{Y}$')
         plt.title('Information flow of individual causal factors')
-        fig_dir = os.path.join(FIGURE_PATH, implementation.upper(), 'pretrained')
+        fig_dir = os.path.join(FIGURE_PATH, implementation.upper())
         os.makedirs(fig_dir, exist_ok=True)
         plt.savefig(fname=os.path.join(fig_dir, 'InformationFlow.' + filetype))
         plt.close()
@@ -345,7 +345,7 @@ def generate_figures(implementation, seed=42, rows=8, cols=7, shuffle=True,
         plt.yticks((0.2,0.4,0.6,0.8,1.0))#,('0.5','','0.75','','1.0'))
         plt.ylabel('Classifier accuracy')
         plt.title('Classifier accuracy after removing aspect')
-        fig_dir = os.path.join(FIGURE_PATH, implementation.upper(), 'pretrained')
+        fig_dir = os.path.join(FIGURE_PATH, implementation.upper())
         os.makedirs(fig_dir, exist_ok=True)
         plt.savefig(fname=os.path.join(fig_dir, 'AblationAccuracy.' + filetype))
         plt.close()
