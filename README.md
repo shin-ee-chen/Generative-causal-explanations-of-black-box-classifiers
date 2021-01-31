@@ -83,8 +83,10 @@ UvA_FACT_2021
 │   └── file for training the language VAE
 ├── lm_gce.py
 │   └── file for training the language GCE (needs pretrained VAE and classifier)
-└── FACT_report.pdf
-    └── accompanying PDF report
+├── FACT_report.pdf
+│   └── accompanying PDF report
+└── results.ipynb
+    └── notebook to easily reproduce obtained results
 ```
 # Students
 Ivo Verhoeven, Mario Holubar, Xinyi Chen, Qingzhi Hu 
