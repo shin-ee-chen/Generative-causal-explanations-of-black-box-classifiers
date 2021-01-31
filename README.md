@@ -83,8 +83,10 @@ UvA_FACT_2021
 │   └── file for training the language VAE
 ├── lm_gce.py
 │   └── file for training the language GCE (needs pretrained VAE and classifier)
-└── FACT_report.pdf
-    └── accompanying PDF report
+├── FACT_report.pdf
+│   └── accompanying PDF report
+└── results.ipynb
+    └── notebook to easily reproduce obtained results
 ```
 # Students
 Ivo Verhoeven, Mario Holubar, Xinyi Chen, Qingzhi Hu 
@@ -115,7 +117,7 @@ Follow the detailed description [here](https://github.com/uvadlc/uvadlc_practica
 
 # How to start
 ### Running one script to get results
-We provide one single python file for displaying all the results (including figure 5ab in the original paper for information flow and comparison of accuracies). Run the following command to get all the reproduced figures/results:
+We provide one single python file for generating all the results (including figure 5ab in the original paper for information flow and comparison of accuracies). Running the following command will save all plots to the figures/ folder:
 ```
 python generate_figures.py
 ```
