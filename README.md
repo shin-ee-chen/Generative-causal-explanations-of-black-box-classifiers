@@ -88,11 +88,6 @@ UvA_FACT_2021
 └── results.ipynb
     └── notebook to easily reproduce obtained results
 ```
-# Students
-Ivo Verhoeven, Mario Holubar, Xinyi Chen, Qingzhi Hu 
-
-
-Email address: ivo.verhoeven, mario.holubar, xinyi.chen, qingzhi.hu@student.uva.nl  
 
 
 # Requirements
